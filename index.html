@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abitur Mediation Trainer (Bavaria)</title>
+    <title>Abitur Mediation Trainer (Login)</title>
     <!-- Externe Bibliotheken -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -16,8 +16,8 @@
             --bg: #f4f6f7;
             --text: #2c3e50;
             --paper: #ffffff;
-            --success: #27ae60;
             --warning: #c0392b;
+            --success: #27ae60;
         }
 
         body {
@@ -30,6 +30,45 @@
             flex-direction: column;
             min-height: 100vh;
         }
+
+        /* --- LOGIN SCREEN CSS --- */
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .login-box {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .login-box h2 { margin-top: 0; color: var(--primary); }
+        .login-box input { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 15px 0; 
+            box-sizing: border-box; 
+            border: 2px solid #ddd; 
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .login-error { color: var(--warning); display: none; margin-top: 10px; font-weight: bold; }
+
+        /* --- APP CONTENT (Hidden by default) --- */
+        #app-wrapper { display: none; flex-direction: column; min-height: 100vh; }
 
         /* Header & Nav */
         header {
@@ -109,12 +148,12 @@
             line-height: 1.8;
             color: #2c3e50;
             text-align: justify;
-            column-count: 1; /* For readability on screen */
+            column-count: 1;
         }
         @media(min-width: 800px) { .source-text { column-count: 2; column-gap: 3rem; } }
 
         /* Forms & Inputs */
-        input, select {
+        input[type="text"], input[type="password"], select {
             padding: 0.8rem;
             border: 1px solid #bdc3c7;
             border-radius: 4px;
@@ -137,8 +176,6 @@
             display: inline-block;
         }
         .btn:hover { background-color: #1f6391; }
-        .btn:disabled { background-color: #bdc3c7; cursor: not-allowed; }
-        
         .btn-outline { background: transparent; border: 2px solid var(--accent); color: var(--accent); }
         .btn-outline:hover { background: var(--accent); color: white; }
 
@@ -177,122 +214,173 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .error-msg { color: var(--warning); background: #fadbd8; padding: 1rem; border-radius: 4px; display: none; margin-top: 1rem;}
+        
+        .status-pill {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            background: #e0f7fa;
+            color: #006064;
+            margin-bottom: 1rem;
+        }
 
-        footer { text-align: center; padding: 2rem; color: #95a5a6; font-size: 0.9rem; }
+        footer { text-align: center; padding: 2rem; color: #95a5a6; font-size: 0.9rem; margin-top: auto;}
     </style>
 </head>
 <body>
 
-<header>
-    <div>
-        <h1>Abitur Mediation Trainer <span class="badge">Bayern 2025 Standard</span></h1>
-    </div>
-    <div style="font-size: 0.9rem; opacity: 0.8;">Powered by GPT-4o-mini</div>
-</header>
-
-<nav>
-    <button onclick="nav('setup')" id="nav-setup" class="active">1. Setup</button>
-    <button onclick="nav('task')" id="nav-task">2. Exam Task</button>
-    <button onclick="nav('write')" id="nav-write">3. Writing</button>
-    <button onclick="nav('feedback')" id="nav-feedback">4. Feedback</button>
-</nav>
-
-<main>
-    <!-- 1. SETUP SECTION -->
-    <section id="setup" class="active">
-        <h2>Prüfungskonfiguration</h2>
-        <p>Geben Sie Ihren API-Schlüssel ein und wählen Sie ein Themenfeld. Das System generiert eine <strong>neue, einzigartige Prüfung</strong> auf Abitur-Niveau.</p>
-        
-        <div style="background: #fff; border: 1px solid #eee; padding: 2rem; border-radius: 8px;">
-            <label><strong>OpenAI API Key</strong></label><br>
-            <input type="password" id="apiKey" placeholder="sk-..." onchange="saveKey()">
-            <p style="font-size: 0.85rem; color: #7f8c8d; margin-top: -10px;">Der Schlüssel wird lokal in Ihrem Browser gespeichert.</p>
-            
+    <!-- LOGIN OVERLAY -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>🔒 Zugriff geschützt</h2>
+            <p>Bitte geben Sie das Kurs-Passwort ein.</p>
+            <input type="password" id="accessPassword" placeholder="Kennwort..." onkeyup="if(event.key === 'Enter') checkPassword()">
             <br>
-            
-            <label><strong>Themenfeld (Abiturjahrgang 2025/26)</strong></label><br>
-            <select id="topicSelect">
-                <option value="Science and Technology: Visions of the future, Utopia vs. Dystopia">Science & Technology (Utopia vs. Dystopia)</option>
-                <option value="Global Chances and Challenges: Sustainability">Global Chances (Sustainability & Environment)</option>
-                <option value="The Media: Impact on individual and society">The Media (Influence & Manipulation)</option>
-                <option value="Politics and Society: UK/USA tradition and change">UK/USA: Tradition & Change</option>
-                <option value="The World of Work: Automation and Digitalization">The World of Work (Future Jobs)</option>
-            </select>
-            
-            <br><br>
-            
-            <button class="btn" onclick="generateExam()">Prüfung erstellen</button>
-            
-            <div id="setupLoader" class="loader"></div>
-            <div id="setupError" class="error-msg"></div>
+            <button class="btn" onclick="checkPassword()">Anmelden</button>
+            <div id="loginError" class="login-error">Falsches Kennwort!</div>
         </div>
-    </section>
+    </div>
 
-    <!-- 2. TASK SECTION -->
-    <section id="task">
-        <h2>Mediation Task</h2>
-        <div class="task-box">
-            <strong>Task:</strong>
-            <div id="taskInstruction" style="white-space: pre-wrap;">Bitte zuerst Prüfung generieren.</div>
-        </div>
-        
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 2rem 0;">
-        
-        <h3>Source Material</h3>
-        <article>
-            <h2 id="articleTitle" style="font-family: 'Georgia', serif; font-style: italic;">Title pending...</h2>
-            <div id="articleBody" class="source-text">
-                Der Text wird hier erscheinen...
-            </div>
-            <p style="text-align: right; color: #999; font-size: 0.8rem; margin-top: 1rem;">(Text adapted for educational purposes, approx. <span id="wordCountLabel">0</span> words)</p>
-        </article>
-    </section>
-
-    <!-- 3. WRITING SECTION -->
-    <section id="write">
-        <h2>Student Response</h2>
-        <p>Verfassen Sie hier Ihre Mediation. Ihre Eingabe wird automatisch gespeichert.</p>
-        
-        <div class="task-box" style="font-size: 0.9rem; padding: 1rem;">
-            <em>Reminder Task:</em> <span id="tinyTaskReminder">...</span>
-        </div>
-
-        <textarea id="studentText" placeholder="Start writing here..." oninput="autoSave()"></textarea>
-        
-        <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
-            <span>Wörter: <strong id="currentWordCount">0</strong></span>
+    <!-- MAIN APP WRAPPER -->
+    <div id="app-wrapper">
+        <header>
             <div>
-                <button class="btn btn-outline" onclick="printPDF()">Download PDF (Notizen)</button>
-                <button class="btn" onclick="submitForCorrection()">Abgeben & Korrigieren</button>
+                <h1>Abitur Mediation Trainer <span class="badge">Bayern 2025</span></h1>
             </div>
-        </div>
-    </section>
+            <div style="font-size: 0.9rem; opacity: 0.8;">Powered by GPT-4o-mini</div>
+        </header>
 
-    <!-- 4. FEEDBACK SECTION -->
-    <section id="feedback">
-        <h2>Bewertung & Feedback</h2>
-        <div id="feedbackLoader" class="loader"></div>
-        <div id="feedbackContent" class="feedback-container">
-            <p>Bitte reichen Sie Ihre Arbeit im Reiter "Writing" ein.</p>
-        </div>
-    </section>
-</main>
+        <nav>
+            <button onclick="nav('setup')" id="nav-setup" class="active">1. Setup</button>
+            <button onclick="nav('task')" id="nav-task">2. Exam Task</button>
+            <button onclick="nav('write')" id="nav-write">3. Writing</button>
+            <button onclick="nav('feedback')" id="nav-feedback">4. Feedback</button>
+        </nav>
 
-<footer>
-    &copy; 2025 Q13 English Department | Local Storage Enabled | Model: GPT-4o-mini
-</footer>
+        <main>
+            <!-- 1. SETUP SECTION -->
+            <section id="setup" class="active">
+                <h2>Prüfungskonfiguration</h2>
+                <div class="status-pill">✓ API Key ist vom Lehrer vorkonfiguriert</div>
+                
+                <p>Wählen Sie ein Themenfeld. Das System generiert eine <strong>neue, einzigartige Prüfung</strong> auf Abitur-Niveau.</p>
+                
+                <div style="background: #fff; border: 1px solid #eee; padding: 2rem; border-radius: 8px;">
+                    
+                    <label><strong>Themenfeld (Abiturjahrgang 2025/26)</strong></label><br>
+                    <select id="topicSelect">
+                        <option value="Science and Technology: Visions of the future, Utopia vs. Dystopia">Science & Technology (Utopia vs. Dystopia)</option>
+                        <option value="Global Chances and Challenges: Sustainability">Global Chances (Sustainability & Environment)</option>
+                        <option value="The Media: Impact on individual and society">The Media (Influence & Manipulation)</option>
+                        <option value="Politics and Society: UK/USA tradition and change">UK/USA: Tradition & Change</option>
+                        <option value="The World of Work: Automation and Digitalization">The World of Work (Future Jobs)</option>
+                    </select>
+                    
+                    <br><br>
+                    
+                    <button class="btn" onclick="generateExam()">Prüfung erstellen (Kosten für Schule: ~0,2 Cent)</button>
+                    
+                    <div id="setupLoader" class="loader"></div>
+                    <div id="setupError" class="error-msg"></div>
+                </div>
+            </section>
+
+            <!-- 2. TASK SECTION -->
+            <section id="task">
+                <h2>Mediation Task</h2>
+                <div class="task-box">
+                    <strong>Task:</strong>
+                    <div id="taskInstruction" style="white-space: pre-wrap;">Bitte zuerst Prüfung generieren.</div>
+                </div>
+                
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 2rem 0;">
+                
+                <h3>Source Material</h3>
+                <article>
+                    <h2 id="articleTitle" style="font-family: 'Georgia', serif; font-style: italic;">Title pending...</h2>
+                    <div id="articleBody" class="source-text">
+                        Der Text wird hier erscheinen...
+                    </div>
+                    <p style="text-align: right; color: #999; font-size: 0.8rem; margin-top: 1rem;">(Text adapted for educational purposes, approx. <span id="wordCountLabel">0</span> words)</p>
+                </article>
+            </section>
+
+            <!-- 3. WRITING SECTION -->
+            <section id="write">
+                <h2>Student Response</h2>
+                <p>Verfassen Sie hier Ihre Mediation. Ihre Eingabe wird automatisch gespeichert.</p>
+                
+                <div class="task-box" style="font-size: 0.9rem; padding: 1rem;">
+                    <em>Reminder Task:</em> <span id="tinyTaskReminder">...</span>
+                </div>
+
+                <textarea id="studentText" placeholder="Start writing here..." oninput="autoSave()"></textarea>
+                
+                <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+                    <span>Wörter: <strong id="currentWordCount">0</strong></span>
+                    <div>
+                        <button class="btn btn-outline" onclick="printPDF()">Download PDF (Notizen)</button>
+                        <button class="btn" onclick="submitForCorrection()">Abgeben & Korrigieren</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. FEEDBACK SECTION -->
+            <section id="feedback">
+                <h2>Bewertung & Feedback</h2>
+                <div id="feedbackLoader" class="loader"></div>
+                <div id="feedbackContent" class="feedback-container">
+                    <p>Bitte reichen Sie Ihre Arbeit im Reiter "Writing" ein.</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            &copy; 2025 Q13 English Department | Local Storage Enabled | Model: GPT-4o-mini
+        </footer>
+    </div>
 
 <script>
-    // --- KONFIGURATION ---
+    // --- LEHRER-KONFIGURATION (HIER EDITIEREN) ---
+    // ACHTUNG: Fügen Sie Ihren Schlüssel unten zwischen die Anführungszeichen ein.
+    // Beispiel: const TEACHER_API_KEY = "sk-proj-123456...";
+    
+    const TEACHER_API_KEY = "HIER_IHREN_KEY_REIN_KOPIEREN"; 
+    
+    // ---------------------------------------------
+
+    // --- PASSWORD PROTECTION ---
+    const COURSE_PASSWORD = "SAG_mediationstraining";
+
+    function checkPassword() {
+        const input = document.getElementById('accessPassword').value;
+        const error = document.getElementById('loginError');
+        
+        if (input === COURSE_PASSWORD) {
+            // Unlock app
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-wrapper').style.display = 'flex';
+            // Optional: Session storage so reload doesn't lock out immediately
+            sessionStorage.setItem('is_authenticated', 'true');
+        } else {
+            error.style.display = 'block';
+        }
+    }
+
+    // --- APP CONFIGURATION ---
     const CONFIG = {
-        model: "gpt-4o-mini", // Kostensparendes Modell
+        model: "gpt-4o-mini", 
         storedData: {}
     };
 
     // --- INIT ---
     window.onload = function() {
-        const key = localStorage.getItem('openai_key');
-        if(key) document.getElementById('apiKey').value = key;
+        if(sessionStorage.getItem('is_authenticated') === 'true') {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-wrapper').style.display = 'flex';
+        }
 
         const savedText = localStorage.getItem('student_text');
         if(savedText) {
@@ -305,10 +393,6 @@
             CONFIG.storedData = JSON.parse(examData);
             renderExam(CONFIG.storedData);
         }
-    }
-
-    function saveKey() {
-        localStorage.setItem('openai_key', document.getElementById('apiKey').value);
     }
 
     function autoSave() {
@@ -324,22 +408,21 @@
         document.getElementById('nav-'+id).classList.add('active');
     }
 
-    // --- 1. GENERIERUNG (Der komplexe Teil) ---
+    // --- 1. GENERIERUNG ---
     async function generateExam() {
-        const apiKey = document.getElementById('apiKey').value;
         const topic = document.getElementById('topicSelect').value;
         const errorBox = document.getElementById('setupError');
         
-        if(!apiKey) {
-            errorBox.style.display = 'block';
-            errorBox.innerText = "Bitte geben Sie einen API Key ein.";
-            return;
+        // Prüfen, ob der Lehrer den Key eingetragen hat
+        if(TEACHER_API_KEY.includes("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") || TEACHER_API_KEY.length < 10) {
+             errorBox.style.display = 'block';
+             errorBox.innerText = "Fehler: Der Lehrer hat den API Key noch nicht im Code hinterlegt.";
+             return;
         }
 
         errorBox.style.display = 'none';
         document.getElementById('setupLoader').style.display = 'block';
 
-        // PROMPT ENGINEERING FÜR ABITUR-NIVEAU
         const prompt = `
         Du bist ein Experte für das bayerische Abitur im Fach Englisch. Erstelle eine Mediation-Prüfungsaufgabe.
         
@@ -349,21 +432,20 @@
         - Schreibe einen anspruchsvollen deutschen Zeitungsartikel oder Kommentar (Niveau FAZ/Zeit/Süddeutsche).
         - Länge: Absolut zwingend zwischen 600 und 800 Wörtern.
         - Stil: Gehoben, idiomatisch, komplexe Satzstrukturen.
-        - Inhalt: Der Text muss vielschichtig sein (verschiedene Argumente, Hintergründe, Expertenmeinungen), damit der Schüler filtern muss.
+        - Inhalt: Der Text muss vielschichtig sein.
         
         AUFGABE TEIL 2: Englische Aufgabenstellung (Mediation Task)
         - Orientierung an Abituraufgabe 2025.
-        - Kontext: Erstelle ein realistisches Szenario (z.B. "You are taking part in an international youth conference...", "You are writing for a student magazine...").
-        - Adressat & Textsorte: Muss klar definiert sein (Article, Blog post, Email).
-        - Operator: Nutze Operatoren wie "outline", "examine", "present".
-        - Bullet Points: Nenne 3-4 konkrete inhaltliche Aspekte, die der Schüler aus dem deutschen Text herausarbeiten muss (Nicht nur "summarize the text"!).
+        - Kontext: Erstelle ein realistisches Szenario (z.B. "International youth conference", "Student magazine").
+        - Adressat & Textsorte: Muss klar definiert sein.
+        - Bullet Points: Nenne 3-4 konkrete inhaltliche Aspekte, die der Schüler aus dem deutschen Text herausarbeiten muss.
         
         OUTPUT FORMAT:
         Antworte NUR mit reinem JSON in folgendem Format:
         {
-          "headline": "Titel des deutschen Artikels",
+          "headline": "Titel des Artikels",
           "article_text": "Der komplette deutsche Text...",
-          "task_instruction": "Die komplette englische Aufgabenstellung inkl. Kontext und Bulletpoints"
+          "task_instruction": "Die komplette englische Aufgabenstellung..."
         }
         `;
 
@@ -372,7 +454,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
+                    'Authorization': `Bearer ${TEACHER_API_KEY}`
                 },
                 body: JSON.stringify({
                     model: CONFIG.model,
@@ -384,16 +466,10 @@
                 })
             });
 
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(`API Fehler: ${errData.error?.message || response.statusText}`);
-            }
+            if (!response.ok) throw new Error("API Fehler (Quota oder Key ungültig)");
 
             const data = await response.json();
-            
-            // JSON Parsing Robustheit
-            let contentStr = data.choices[0].message.content;
-            contentStr = contentStr.replace(/```json/g, '').replace(/```/g, '').trim();
+            let contentStr = data.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '').trim();
             const content = JSON.parse(contentStr);
 
             CONFIG.storedData = content;
@@ -404,7 +480,7 @@
 
         } catch (e) {
             errorBox.style.display = 'block';
-            errorBox.innerText = "Fehler: " + e.message + " (Haben Sie Guthaben auf dem OpenAI Konto?)";
+            errorBox.innerText = "Fehler: " + e.message;
         } finally {
             document.getElementById('setupLoader').style.display = 'none';
         }
@@ -415,7 +491,6 @@
         document.getElementById('tinyTaskReminder').innerText = data.task_instruction.substring(0, 100) + "...";
         document.getElementById('articleTitle').innerText = data.headline;
         
-        // Formatiere den Artikeltext mit Absätzen
         const formattedText = data.article_text.split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('');
         document.getElementById('articleBody').innerHTML = formattedText;
         
@@ -425,10 +500,9 @@
     // --- 2. KORREKTUR ---
     async function submitForCorrection() {
         const text = document.getElementById('studentText').value;
-        const apiKey = document.getElementById('apiKey').value;
 
         if(text.split(' ').length < 50) {
-            alert("Ihr Text ist zu kurz für eine Bewertung.");
+            alert("Ihr Text ist zu kurz.");
             return;
         }
 
@@ -438,35 +512,26 @@
 
         const rubric = `
         Bewerte streng nach dem bayerischen Abitur-Raster (Gymnasium).
-        
-        Bewertungskriterien:
-        1. Inhalt (0-4 BE): Aufgabenerfüllung, Informationsauswahl (Wichtiges vs. Unwichtiges), Adressatenbezug.
-        2. Sprache (0-6 BE): Wortschatz, Grammatik, Idiomatik, Register.
+        1. Inhalt (0-4 BE)
+        2. Sprache (0-6 BE)
         
         Gib das Feedback in Markdown Format:
         # Bewertungsergebnis
         **Gesamtpunktzahl: [Punkte]/10 BE**
-        
         ## Inhalt ([Punkte]/4 BE)
-        - [Positives]
-        - [Fehlendes/Falsches]
-        
         ## Sprache ([Punkte]/6 BE)
-        - [Analyse Wortschatz/Grammatik]
-        - [Liste der gröbsten Fehler mit Korrekturvorschlag]
-        
-        ## Tipps für das nächste Mal
+        ## Tipps
         `;
 
         try {
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TEACHER_API_KEY}` },
                 body: JSON.stringify({
                     model: CONFIG.model,
                     messages: [
                         {role: "system", content: "You are a strict teacher grading a German Abitur exam."},
-                        {role: "user", content: `Original German Text: ${CONFIG.storedData.article_text}\nTask: ${CONFIG.storedData.task_instruction}\nStudent Essay: ${text}\n\n${rubric}`}
+                        {role: "user", content: `Original: ${CONFIG.storedData.article_text}\nTask: ${CONFIG.storedData.task_instruction}\nStudent: ${text}\n\n${rubric}`}
                     ]
                 })
             });
@@ -476,13 +541,12 @@
             document.getElementById('feedbackContent').innerHTML = marked.parse(feedback);
 
         } catch (e) {
-            document.getElementById('feedbackContent').innerHTML = `<p style="color:red">Fehler bei der Korrektur: ${e.message}</p>`;
+            document.getElementById('feedbackContent').innerHTML = `<p style="color:red">Fehler: ${e.message}</p>`;
         } finally {
             document.getElementById('feedbackLoader').style.display = 'none';
         }
     }
 
-    // --- TOOLS ---
     function countWords(str) {
         return str.trim().split(/\s+/).filter(a => a).length;
     }
