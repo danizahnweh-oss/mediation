@@ -3,23 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Q13 Advanced Mediation Trainer</title>
+    <title>Abitur Mediation Trainer (Bavaria)</title>
+    <!-- Externe Bibliotheken -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     
     <style>
         :root {
-            --primary: #2c3e50; /* Academic Blue */
+            --primary: #2c3e50;
             --secondary: #34495e;
-            --accent: #16a085; /* Calming Green */
-            --bg: #fdfdfd;
-            --text: #333;
+            --accent: #2980b9;
+            --bg: #f4f6f7;
+            --text: #2c3e50;
             --paper: #ffffff;
+            --success: #27ae60;
+            --warning: #c0392b;
         }
 
         body {
-            font-family: 'Georgia', 'Times New Roman', serif; /* Serif for reading */
-            background-color: #ecf0f1;
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica', sans-serif;
+            background-color: var(--bg);
             color: var(--text);
             margin: 0;
             line-height: 1.6;
@@ -28,288 +31,341 @@
             min-height: 100vh;
         }
 
-        /* Navigation */
+        /* Header & Nav */
         header {
             background-color: var(--primary);
             color: white;
             padding: 1rem 2rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        h1 { margin: 0; font-size: 1.5rem; font-family: 'Helvetica Neue', sans-serif; font-weight: 300; }
+        h1 { margin: 0; font-size: 1.4rem; font-weight: 400; letter-spacing: 1px; }
+        .badge { background: var(--accent); padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
         
         nav {
-            display: flex;
-            background: var(--secondary);
+            background: white;
             padding: 0 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
         }
 
         nav button {
             background: none;
             border: none;
-            color: #bdc3c7;
-            padding: 1rem 1.5rem;
+            color: var(--secondary);
+            padding: 1rem 0.5rem;
             cursor: pointer;
             font-size: 1rem;
-            transition: all 0.3s;
+            font-weight: 500;
             border-bottom: 3px solid transparent;
+            transition: all 0.2s;
         }
 
-        nav button:hover, nav button.active {
-            color: white;
-            background-color: rgba(255,255,255,0.1);
-            border-bottom-color: var(--accent);
-        }
+        nav button:hover { color: var(--accent); }
+        nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
 
-        /* Main Content Area */
+        /* Main Content */
         main {
             flex: 1;
-            max-width: 900px;
+            max-width: 1000px;
             margin: 2rem auto;
             padding: 0 1rem;
             width: 100%;
+            box-sizing: border-box;
         }
 
         section {
             display: none;
             background: var(--paper);
-            padding: 3rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border-radius: 4px;
-            animation: fadeIn 0.5s;
+            padding: 2.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            margin-bottom: 2rem;
         }
 
-        section.active { display: block; }
+        section.active { display: block; animation: slideUp 0.4s ease-out; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Typography & Elements */
-        h2 { border-bottom: 1px solid #eee; padding-bottom: 0.5rem; color: var(--primary); margin-top: 0; }
-        .academic-text { font-size: 1.1rem; text-align: justify; hyphens: auto; }
+        /* Typography */
+        h2 { border-bottom: 2px solid #f0f0f0; padding-bottom: 0.5rem; color: var(--primary); margin-top: 0; }
+        h3 { color: var(--secondary); margin-top: 2rem; }
         
-        /* Controls */
-        .controls { margin-bottom: 2rem; padding: 1rem; background: #f8f9fa; border-left: 4px solid var(--accent); }
-        select, input[type="password"] { padding: 0.5rem; margin-right: 1rem; border: 1px solid #ddd; border-radius: 4px; }
-        
+        .task-box {
+            background-color: #eef2f5;
+            border-left: 5px solid var(--accent);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .source-text {
+            font-family: 'Georgia', serif;
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: #2c3e50;
+            text-align: justify;
+            column-count: 1; /* For readability on screen */
+        }
+        @media(min-width: 800px) { .source-text { column-count: 2; column-gap: 3rem; } }
+
+        /* Forms & Inputs */
+        input, select {
+            padding: 0.8rem;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 1rem;
+        }
+
         .btn {
-            background-color: var(--primary);
+            background-color: var(--accent);
             color: white;
             border: none;
-            padding: 0.6rem 1.2rem;
+            padding: 0.8rem 1.5rem;
             cursor: pointer;
             border-radius: 4px;
             font-size: 1rem;
-            transition: background 0.3s;
+            font-weight: 600;
+            transition: background 0.2s;
+            display: inline-block;
         }
-        .btn:hover { background-color: var(--accent); }
-        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        .btn:hover { background-color: #1f6391; }
+        .btn:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+        
+        .btn-outline { background: transparent; border: 2px solid var(--accent); color: var(--accent); }
+        .btn-outline:hover { background: var(--accent); color: white; }
 
-        /* Writing Area */
+        /* Editor */
         textarea {
             width: 100%;
-            min-height: 400px;
-            padding: 1rem;
-            font-family: 'Courier New', monospace; /* Monospace for editing */
-            font-size: 1rem;
-            border: 1px solid #ccc;
+            min-height: 500px;
+            padding: 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
             resize: vertical;
-            margin-bottom: 1rem;
-            background-color: #fafafa;
+            line-height: 1.6;
+            background: #fafafa;
+            box-sizing: border-box;
         }
+        textarea:focus { outline: 2px solid var(--accent); background: white; }
 
-        /* Feedback Styling */
-        .feedback-box { background: #f0f4f8; padding: 1.5rem; margin-top: 1rem; border-radius: 5px; }
-        .grade-badge { 
-            float: right; 
-            background: var(--primary); 
-            color: white; 
-            padding: 0.5rem 1rem; 
-            border-radius: 50%; 
-            font-weight: bold; 
-            font-size: 1.2rem; 
+        /* Feedback Area */
+        .feedback-container h1, .feedback-container h2, .feedback-container h3 { margin-top: 1.5rem; }
+        .feedback-container ul { padding-left: 1.5rem; }
+        .feedback-container blockquote { border-left: 4px solid #ddd; margin: 0; padding-left: 1rem; color: #777; }
+        
+        /* Loaders */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 20px auto;
         }
-
-        /* Loading Spinner */
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--accent); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; display: none; margin: 10px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Footer */
-        footer { text-align: center; padding: 1rem; font-size: 0.8rem; color: #7f8c8d; }
+        .error-msg { color: var(--warning); background: #fadbd8; padding: 1rem; border-radius: 4px; display: none; margin-top: 1rem;}
+
+        footer { text-align: center; padding: 2rem; color: #95a5a6; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>Q13 English Mediation // Advanced Level</h1>
+    <div>
+        <h1>Abitur Mediation Trainer <span class="badge">Bayern 2025 Standard</span></h1>
+    </div>
+    <div style="font-size: 0.9rem; opacity: 0.8;">Powered by GPT-4o-mini</div>
 </header>
 
 <nav>
-    <button onclick="showSection('setup')" class="active">1. Setup & Context</button>
-    <button onclick="showSection('source')">2. Source Text</button>
-    <button onclick="showSection('workspace')">3. Workspace</button>
-    <button onclick="showSection('assessment')">4. Assessment</button>
-    <button onclick="showSection('reflection')">5. Reflection</button>
+    <button onclick="nav('setup')" id="nav-setup" class="active">1. Setup</button>
+    <button onclick="nav('task')" id="nav-task">2. Exam Task</button>
+    <button onclick="nav('write')" id="nav-write">3. Writing</button>
+    <button onclick="nav('feedback')" id="nav-feedback">4. Feedback</button>
 </nav>
 
 <main>
+    <!-- 1. SETUP SECTION -->
     <section id="setup" class="active">
-        <h2>Configuration</h2>
-        <div class="controls">
-            <p><strong>Step 1:</strong> Enter your API Key to enable the AI Generator.</p>
-            <input type="password" id="apiKey" placeholder="sk-..." style="width: 300px;">
-            <p style="font-size: 0.8rem; color: #666;">Note: The key is stored locally in your browser only.</p>
-        </div>
-
-        <div class="controls">
-            <p><strong>Step 2:</strong> Select a Topic Field (Abitur 2024-2026).</p>
-            <select id="topicSelect">
-                <option value="Science and Technology: Visions of the future, Utopia vs. Dystopia">Science & Technology (Utopia/Dystopia)</option>
-                <option value="Global Chances and Challenges: Sustainability">Global Chances (Sustainability)</option>
-                <option value="The Media: Impact on individual and society">The Media & Society</option>
-                <option value="Politics and Society: UK/USA tradition and change">UK/USA: Tradition & Change</option>
-            </select>
-            <br><br>
-            <button class="btn" onclick="generateTask()">Generate New Exam Task</button>
-            <div id="setupLoader" class="loader"></div>
-            <p id="setupStatus" style="text-align:center; font-style:italic;"></p>
-        </div>
+        <h2>Prüfungskonfiguration</h2>
+        <p>Geben Sie Ihren API-Schlüssel ein und wählen Sie ein Themenfeld. Das System generiert eine <strong>neue, einzigartige Prüfung</strong> auf Abitur-Niveau.</p>
         
-        <h3>Pedagogical Context</h3>
-        <p>This tool simulates the Bavarian Abitur requirements. It generates a unique German source text (C1/C2 Level) and a specific mediation prompt based on the chosen topic.</p>
+        <div style="background: #fff; border: 1px solid #eee; padding: 2rem; border-radius: 8px;">
+            <label><strong>OpenAI API Key</strong></label><br>
+            <input type="password" id="apiKey" placeholder="sk-..." onchange="saveKey()">
+            <p style="font-size: 0.85rem; color: #7f8c8d; margin-top: -10px;">Der Schlüssel wird lokal in Ihrem Browser gespeichert.</p>
+            
+            <br>
+            
+            <label><strong>Themenfeld (Abiturjahrgang 2025/26)</strong></label><br>
+            <select id="topicSelect">
+                <option value="Science and Technology: Visions of the future, Utopia vs. Dystopia">Science & Technology (Utopia vs. Dystopia)</option>
+                <option value="Global Chances and Challenges: Sustainability">Global Chances (Sustainability & Environment)</option>
+                <option value="The Media: Impact on individual and society">The Media (Influence & Manipulation)</option>
+                <option value="Politics and Society: UK/USA tradition and change">UK/USA: Tradition & Change</option>
+                <option value="The World of Work: Automation and Digitalization">The World of Work (Future Jobs)</option>
+            </select>
+            
+            <br><br>
+            
+            <button class="btn" onclick="generateExam()">Prüfung erstellen (Kosten: ~0,2 Cent)</button>
+            
+            <div id="setupLoader" class="loader"></div>
+            <div id="setupError" class="error-msg"></div>
+        </div>
     </section>
 
-    <section id="source">
-        <h2>Source Material & Task</h2>
-        <div id="taskContainer" style="background: #e8f6f3; padding: 1rem; margin-bottom: 2rem; border-left: 5px solid var(--accent);">
-            <strong>Task:</strong> <span id="taskPrompt">Bitte generieren Sie zuerst eine Aufgabe im Setup.</span>
+    <!-- 2. TASK SECTION -->
+    <section id="task">
+        <h2>Mediation Task</h2>
+        <div class="task-box">
+            <strong>Task:</strong>
+            <div id="taskInstruction" style="white-space: pre-wrap;">Bitte zuerst Prüfung generieren.</div>
         </div>
-        <article class="academic-text">
-            <h3 id="articleHeadline">Waiting for generation...</h3>
-            <div id="articleBody">
-                <p>Noch kein Text geladen.</p>
+        
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 2rem 0;">
+        
+        <h3>Source Material</h3>
+        <article>
+            <h2 id="articleTitle" style="font-family: 'Georgia', serif; font-style: italic;">Title pending...</h2>
+            <div id="articleBody" class="source-text">
+                Der Text wird hier erscheinen...
             </div>
+            <p style="text-align: right; color: #999; font-size: 0.8rem; margin-top: 1rem;">(Text adapted for educational purposes, approx. <span id="wordCountLabel">0</span> words)</p>
         </article>
     </section>
 
-    <section id="workspace">
-        <h2>Student Workspace</h2>
-        <p>Write your mediation below. Your work is automatically saved.</p>
+    <!-- 3. WRITING SECTION -->
+    <section id="write">
+        <h2>Student Response</h2>
+        <p>Verfassen Sie hier Ihre Mediation. Ihre Eingabe wird automatisch gespeichert.</p>
         
-        <textarea id="studentText" placeholder="Start writing your mediation here..." oninput="saveProgress()"></textarea>
-        
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <button class="btn" onclick="submitWork()">Submit for Grading</button>
-            <button class="btn btn-outline" onclick="exportPDF()">Download PDF (Notes Only)</button>
+        <div class="task-box" style="font-size: 0.9rem; padding: 1rem;">
+            <em>Reminder Task:</em> <span id="tinyTaskReminder">...</span>
         </div>
-        <p style="font-size: 0.8rem; margin-top: 10px;">Word Count: <span id="wordCount">0</span></p>
+
+        <textarea id="studentText" placeholder="Start writing here..." oninput="autoSave()"></textarea>
+        
+        <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+            <span>Wörter: <strong id="currentWordCount">0</strong></span>
+            <div>
+                <button class="btn btn-outline" onclick="printPDF()">Download PDF (Notizen)</button>
+                <button class="btn" onclick="submitForCorrection()">Abgeben & Korrigieren</button>
+            </div>
+        </div>
     </section>
 
-    <section id="assessment">
-        <h2>Assessment & Feedback</h2>
-        <div id="gradingLoader" class="loader"></div>
-        <div id="gradingOutput">
-            <p>Please submit your work in the Workspace tab first.</p>
+    <!-- 4. FEEDBACK SECTION -->
+    <section id="feedback">
+        <h2>Bewertung & Feedback</h2>
+        <div id="feedbackLoader" class="loader"></div>
+        <div id="feedbackContent" class="feedback-container">
+            <p>Bitte reichen Sie Ihre Arbeit im Reiter "Writing" ein.</p>
         </div>
-    </section>
-
-    <section id="reflection">
-        <h2>Self-Reflection</h2>
-        <p>Wie sicher fühlen Sie sich im Umgang mit diesem Thema und den Vokabeln?</p>
-        
-        <div style="font-size: 2rem; text-align: center; margin: 2rem 0;">
-            <span style="cursor:pointer; margin: 0 10px;" onclick="rate(1)">😫</span>
-            <span style="cursor:pointer; margin: 0 10px;" onclick="rate(2)">😕</span>
-            <span style="cursor:pointer; margin: 0 10px;" onclick="rate(3)">😐</span>
-            <span style="cursor:pointer; margin: 0 10px;" onclick="rate(4)">🙂</span>
-            <span style="cursor:pointer; margin: 0 10px;" onclick="rate(5)">🤩</span>
-        </div>
-        <p id="ratingFeedback" style="text-align: center; font-weight: bold;"></p>
-
-        <textarea placeholder="Notizen zur eigenen Leistung: Was lief gut? Wo brauche ich noch Übung?" style="height: 150px;"></textarea>
     </section>
 </main>
 
 <footer>
-    &copy; 2026 Q13 English Dept. | Local Data Storage Enabled | Bavarian Curriculum Standard
+    &copy; 2025 Q13 English Department | Local Storage Enabled | Model: GPT-4o-mini
 </footer>
 
 <script>
-    // --- STATE MANAGEMENT ---
+    // --- KONFIGURATION ---
     const CONFIG = {
-        generatedArticle: "",
-        generatedTask: "",
-        gradingRubric: `
-        Du bist ein strenger Englischlehrer am Gymnasium in Bayern (Oberstufe). Korrigiere die folgende Mediation basierend auf diesem Raster:
-        
-        1. INHALT (0-4 BE):
-        - 4 BE: Klar strukturiert, alle Infos korrekt, Adressatenbezug top.
-        - 3 BE: Meist strukturiert, wesentliche Infos da.
-        - 2 BE: Teilweise strukturiert, Lücken in Infos.
-        - 1 BE: Unvollständig, kaum strukturiert.
-        - 0 BE: Thema verfehlt.
-        
-        2. SPRACHE (0-6 BE):
-        - 6 BE: Nahezu fehlerfrei, breites Repertoire, idiomatisch.
-        - 5 BE: Leichte Verstöße, gefestigtes Repertoire.
-        - 4 BE: Mehrere leichte Verstöße, aber verständlich.
-        - 3 BE: Mehrere, teilw. gravierende Verstöße, eingeschränktes Repertoire.
-        - 2 BE: Viele gravierende Fehler, Verständnis gestört.
-        - 1 BE: Stark eingeschränktes Repertoire.
-        - 0 BE: Unverständlich.
-        
-        Gib das Feedback in diesem Format aus (nutze Markdown):
-        ## Assessment
-        **Inhalt:** [Punkte]/4
-        **Sprache:** [Punkte]/6
-        **Gesamt:** [Summe]/10
-        
-        ### Detailed Feedback
-        * [Positiver Aspekt]
-        * [Korrekturvorschlag für Fehler mit Erklärung]
-        * [Tipps zur Textstruktur]
-        `
+        model: "gpt-4o-mini", // Kostensparendes Modell
+        storedData: {}
     };
 
-    // Load saved data on startup
+    // --- INIT ---
     window.onload = function() {
-        if(localStorage.getItem('apiKey')) document.getElementById('apiKey').value = localStorage.getItem('apiKey');
-        if(localStorage.getItem('studentText')) {
-            document.getElementById('studentText').value = localStorage.getItem('studentText');
-            updateWordCount();
+        const key = localStorage.getItem('openai_key');
+        if(key) document.getElementById('apiKey').value = key;
+
+        const savedText = localStorage.getItem('student_text');
+        if(savedText) {
+            document.getElementById('studentText').value = savedText;
+            document.getElementById('currentWordCount').innerText = countWords(savedText);
         }
-        if(localStorage.getItem('generatedArticle')) {
-            renderArticle(localStorage.getItem('generatedArticle'), localStorage.getItem('generatedTask'));
+
+        const examData = localStorage.getItem('exam_data');
+        if(examData) {
+            CONFIG.storedData = JSON.parse(examData);
+            renderExam(CONFIG.storedData);
         }
     }
 
-    // --- NAVIGATION ---
-    function showSection(id) {
+    function saveKey() {
+        localStorage.setItem('openai_key', document.getElementById('apiKey').value);
+    }
+
+    function autoSave() {
+        const text = document.getElementById('studentText').value;
+        localStorage.setItem('student_text', text);
+        document.getElementById('currentWordCount').innerText = countWords(text);
+    }
+
+    function nav(id) {
         document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        
-        // Find button that corresponds to section and activate it
-        const index = ['setup', 'source', 'workspace', 'assessment', 'reflection'].indexOf(id);
-        document.querySelectorAll('nav button')[index].classList.add('active');
+        document.getElementById('nav-'+id).classList.add('active');
     }
 
-    // --- LOGIC: GENERATE TASK (API) ---
-    async function generateTask() {
+    // --- 1. GENERIERUNG (Der komplexe Teil) ---
+    async function generateExam() {
         const apiKey = document.getElementById('apiKey').value;
         const topic = document.getElementById('topicSelect').value;
+        const errorBox = document.getElementById('setupError');
         
-        if (!apiKey) { alert("Bitte API Key eingeben!"); return; }
-        localStorage.setItem('apiKey', apiKey); // Save convenience
-        
-        document.getElementById('setupLoader').style.display = 'block';
-        document.getElementById('setupStatus').innerText = "Generiere anspruchsvollen Text (das kann 30sek dauern)...";
+        if(!apiKey) {
+            errorBox.style.display = 'block';
+            errorBox.innerText = "Bitte geben Sie einen API Key ein.";
+            return;
+        }
 
-        const prompt = `Erstelle eine Mediations-Klausur für die Q13 (Englisch, Bayern).
-        Thema: ${topic}.
-        1. Schreibe einen anspruchsvollen deutschen Zeitungsartikel (mind. 450 Wörter, Niveau FAZ/Zeit) zu diesem Thema. Der Text muss komplexe Satzstrukturen und fachspezifisches Vokabular enthalten.
-        2. Formuliere eine englische Mediationsaufgabe dazu (z.B. Write an email to your American friend summarizing...).
+        errorBox.style.display = 'none';
+        document.getElementById('setupLoader').style.display = 'block';
+
+        // PROMPT ENGINEERING FÜR ABITUR-NIVEAU
+        const prompt = `
+        Du bist ein Experte für das bayerische Abitur im Fach Englisch. Erstelle eine Mediation-Prüfungsaufgabe.
         
-        Gib die Antwort NUR im JSON-Format: {"headline": "...", "article": "...", "task": "..."}`;
+        THEMA: ${topic}
+        
+        AUFGABE TEIL 1: Deutscher Quelltext
+        - Schreibe einen anspruchsvollen deutschen Zeitungsartikel oder Kommentar (Niveau FAZ/Zeit/Süddeutsche).
+        - Länge: Absolut zwingend zwischen 600 und 800 Wörtern.
+        - Stil: Gehoben, idiomatisch, komplexe Satzstrukturen.
+        - Inhalt: Der Text muss vielschichtig sein (verschiedene Argumente, Hintergründe, Expertenmeinungen), damit der Schüler filtern muss.
+        
+        AUFGABE TEIL 2: Englische Aufgabenstellung (Mediation Task)
+        - Orientierung an Abituraufgabe 2025.
+        - Kontext: Erstelle ein realistisches Szenario (z.B. "You are taking part in an international youth conference...", "You are writing for a student magazine...").
+        - Adressat & Textsorte: Muss klar definiert sein (Article, Blog post, Email).
+        - Operator: Nutze Operatoren wie "outline", "examine", "present".
+        - Bullet Points: Nenne 3-4 konkrete inhaltliche Aspekte, die der Schüler aus dem deutschen Text herausarbeiten muss (Nicht nur "summarize the text"!).
+        
+        OUTPUT FORMAT:
+        Antworte NUR mit reinem JSON in folgendem Format:
+        {
+          "headline": "Titel des deutschen Artikels",
+          "article_text": "Der komplette deutsche Text...",
+          "task_instruction": "Die komplette englische Aufgabenstellung inkl. Kontext und Bulletpoints"
+        }
+        `;
 
         try {
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -319,122 +375,128 @@
                     'Authorization': `Bearer ${apiKey}`
                 },
                 body: JSON.stringify({
-                    model: "gpt-4o-mini", // or gpt-3.5-turbo
-                    messages: [{role: "system", content: "You are an exam creator."}, {role: "user", content: prompt}],
+                    model: CONFIG.model,
+                    messages: [
+                        {role: "system", content: "You are an exam creator for the German Abitur (Bavaria). Return valid JSON only."},
+                        {role: "user", content: prompt}
+                    ],
                     temperature: 0.7
                 })
             });
 
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(`API Fehler: ${errData.error?.message || response.statusText}`);
+            }
+
             const data = await response.json();
-            const content = JSON.parse(data.choices[0].message.content.replace(/```json/g, '').replace(/```/g, ''));
-
-            CONFIG.generatedArticle = content.article;
-            CONFIG.generatedTask = content.task;
-            CONFIG.generatedHeadline = content.headline;
-
-            // Save to prevent loss
-            localStorage.setItem('generatedArticle', JSON.stringify(content));
             
-            renderArticle(content);
-            document.getElementById('setupStatus').innerText = "Erfolgreich erstellt! Gehe zu Tab 2.";
-            showSection('source');
+            // JSON Parsing Robustheit
+            let contentStr = data.choices[0].message.content;
+            contentStr = contentStr.replace(/```json/g, '').replace(/```/g, '').trim();
+            const content = JSON.parse(contentStr);
 
-        } catch (error) {
-            console.error(error);
-            alert("Fehler bei der Generierung. Prüfen Sie den API Key.");
+            CONFIG.storedData = content;
+            localStorage.setItem('exam_data', JSON.stringify(content));
+
+            renderExam(content);
+            nav('task');
+
+        } catch (e) {
+            errorBox.style.display = 'block';
+            errorBox.innerText = "Fehler: " + e.message + " (Haben Sie Guthaben auf dem OpenAI Konto?)";
         } finally {
             document.getElementById('setupLoader').style.display = 'none';
         }
     }
 
-    function renderArticle(content) {
-        // Handle both raw object or string from storage
-        if(typeof content === 'string') content = JSON.parse(content);
+    function renderExam(data) {
+        document.getElementById('taskInstruction').innerText = data.task_instruction;
+        document.getElementById('tinyTaskReminder').innerText = data.task_instruction.substring(0, 100) + "...";
+        document.getElementById('articleTitle').innerText = data.headline;
         
-        document.getElementById('taskPrompt').innerText = content.task;
-        document.getElementById('articleHeadline').innerText = content.headline;
-        // Simple formatting for paragraphs
-        document.getElementById('articleBody').innerHTML = content.article.split('\n').map(p => `<p>${p}</p>`).join('');
-    }
-
-    // --- LOGIC: WORKSPACE ---
-    function saveProgress() {
-        const text = document.getElementById('studentText').value;
-        localStorage.setItem('studentText', text);
-        updateWordCount();
-    }
-
-    function updateWordCount() {
-        const text = document.getElementById('studentText').value;
-        const count = text.trim().split(/\s+/).length;
-        document.getElementById('wordCount').innerText = text ? count : 0;
-    }
-
-    // --- LOGIC: PDF EXPORT ---
-    function exportPDF() {
-        const element = document.createElement('div');
-        element.innerHTML = `
-            <h1>Mediation Submission</h1>
-            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-            <hr>
-            <div style="font-family: monospace; white-space: pre-wrap;">
-                ${document.getElementById('studentText').value}
-            </div>
-        `;
+        // Formatiere den Artikeltext mit Absätzen
+        const formattedText = data.article_text.split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('');
+        document.getElementById('articleBody').innerHTML = formattedText;
         
-        html2pdf().from(element).save('mediation_submission.pdf');
+        document.getElementById('wordCountLabel').innerText = countWords(data.article_text);
     }
 
-    // --- LOGIC: ASSESSMENT (API) ---
-    async function submitWork() {
+    // --- 2. KORREKTUR ---
+    async function submitForCorrection() {
         const text = document.getElementById('studentText').value;
         const apiKey = document.getElementById('apiKey').value;
 
-        if(text.length < 50) { alert("Bitte schreiben Sie erst den Text."); return; }
-        
-        showSection('assessment');
-        document.getElementById('gradingLoader').style.display = 'block';
-        document.getElementById('gradingOutput').innerHTML = "Korrigiere anhand des bayerischen Rasters...";
+        if(text.split(' ').length < 50) {
+            alert("Ihr Text ist zu kurz für eine Bewertung.");
+            return;
+        }
 
-        const correctionPrompt = `
-        Source Text Headline: ${CONFIG.generatedHeadline}
-        Task: ${CONFIG.generatedTask}
-        Student Submission: "${text}"
+        nav('feedback');
+        document.getElementById('feedbackLoader').style.display = 'block';
+        document.getElementById('feedbackContent').innerHTML = "";
+
+        const rubric = `
+        Bewerte streng nach dem bayerischen Abitur-Raster (Gymnasium).
         
-        ${CONFIG.gradingRubric}
+        Bewertungskriterien:
+        1. Inhalt (0-4 BE): Aufgabenerfüllung, Informationsauswahl (Wichtiges vs. Unwichtiges), Adressatenbezug.
+        2. Sprache (0-6 BE): Wortschatz, Grammatik, Idiomatik, Register.
+        
+        Gib das Feedback in Markdown Format:
+        # Bewertungsergebnis
+        **Gesamtpunktzahl: [Punkte]/10 BE**
+        
+        ## Inhalt ([Punkte]/4 BE)
+        - [Positives]
+        - [Fehlendes/Falsches]
+        
+        ## Sprache ([Punkte]/6 BE)
+        - [Analyse Wortschatz/Grammatik]
+        - [Liste der gröbsten Fehler mit Korrekturvorschlag]
+        
+        ## Tipps für das nächste Mal
         `;
 
         try {
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
                 body: JSON.stringify({
-                    model: "gpt-4o-mini",
-                    messages: [{role: "user", content: correctionPrompt}],
-                    temperature: 0.3
+                    model: CONFIG.model,
+                    messages: [
+                        {role: "system", content: "You are a strict teacher grading a German Abitur exam."},
+                        {role: "user", content: `Original German Text: ${CONFIG.storedData.article_text}\nTask: ${CONFIG.storedData.task_instruction}\nStudent Essay: ${text}\n\n${rubric}`}
+                    ]
                 })
             });
 
             const data = await response.json();
-            const feedbackMarkdown = data.choices[0].message.content;
-            
-            // Render Markdown
-            document.getElementById('gradingOutput').innerHTML = marked.parse(feedbackMarkdown);
+            const feedback = data.choices[0].message.content;
+            document.getElementById('feedbackContent').innerHTML = marked.parse(feedback);
 
-        } catch (error) {
-            alert("Fehler bei der Korrektur.");
+        } catch (e) {
+            document.getElementById('feedbackContent').innerHTML = `<p style="color:red">Fehler bei der Korrektur: ${e.message}</p>`;
         } finally {
-            document.getElementById('gradingLoader').style.display = 'none';
+            document.getElementById('feedbackLoader').style.display = 'none';
         }
     }
 
-    // --- LOGIC: REFLECTION ---
-    function rate(stars) {
-        const feedback = ["Ich brauche dringend Hilfe.", "Es war sehr schwer.", "Ganz okay, aber unsicher.", "Gut verstanden.", "Exzellent, ich bin bereit fürs Abi!"];
-        document.getElementById('ratingFeedback').innerText = feedback[stars-1];
+    // --- TOOLS ---
+    function countWords(str) {
+        return str.trim().split(/\s+/).filter(a => a).length;
+    }
+
+    function printPDF() {
+        const element = document.createElement('div');
+        element.innerHTML = `
+            <h2>Mediation Submission</h2>
+            <p><strong>Topic:</strong> ${document.getElementById('topicSelect').value}</p>
+            <div style="border:1px solid #000; padding: 1rem; margin-top:1rem;">
+                ${document.getElementById('studentText').value.replace(/\n/g, '<br>')}
+            </div>
+        `;
+        html2pdf().from(element).save('mediation_abitur.pdf');
     }
 </script>
 
