@@ -432,19 +432,43 @@
         const prompt = `
         Du bist ein Experte für das bayerische Abitur im Fach Englisch. Erstelle eine Mediation-Prüfungsaufgabe.
         
-        THEMA: ${topic}
         
-        AUFGABE TEIL 1: Deutscher Quelltext
-        - Schreibe einen anspruchsvollen deutschen Zeitungsartikel oder Kommentar (Niveau FAZ/Zeit/Süddeutsche).
-        - Länge: zwischen 600 und 800 Wörtern. Weniger ist absolut nicht aktzeptabel.
-        - Stil: Gehoben, idiomatisch, komplexe Satzstrukturen.
-        - Inhalt: Der Text muss vielschichtig sein.
         
-        AUFGABE TEIL 2: Englische Aufgabenstellung (Mediation Task)
-        - Orientierung an Abituraufgabe 2025.
-        - Kontext: Erstelle ein realistisches Szenario (z.B. "International youth conference", "Student magazine").
-        - Adressat & Textsorte: Muss klar definiert sein.
-        - Nenne 3-4 konkrete inhaltliche Aspekte, die der Schüler aus dem deutschen Text herausarbeiten muss.
+  Rolle: Du bist ein hochqualifizierter Redakteur für das Feuilleton einer großen deutschen Wochenzeitung (wie DIE ZEIT oder FAZ). Dein Schreibstil ist intellektuell anspruchsvoll, metaphorisch reich und nutzt komplexe Satzgefüge (Hypotaxen).
+
+Deine Aufgabe:
+
+1. Erstellung des deutschen Quelltextes (MINDESTENS 600 - 800 WÖRTER):
+
+THEMA: ${topic}
+
+Strikte Längenvorgabe: Der Text muss absolut mindestens 600 Wörter lang sein. Wenn er kürzer ist, ist die Aufgabe fehlgeschlagen.
+
+Strukturzwang für die Länge: Um die Wortzahl zu erreichen, gliedere den Text zwingend in folgende 5 Abschnitte:
+
+Einleitung: Ein aktuelles, lebendiges Szenario oder eine historische Analogie (ca. 100 Wörter).
+
+Status Quo: Detaillierte Analyse der gegenwärtigen Situation mit mindestens zwei fiktiven Expertenmeinungen (ca. 150-200 Wörter).
+
+Die Gegenseite/Kritik: Ein ausführlicher Exkurs über die Risiken oder moralischen Bedenken, unter Verwendung gehobener Vokabeln (ca. 150-200 Wörter).
+
+Zukunftsvision: Eine tiefschürfende Reflexion über die langfristigen Folgen für die Gesellschaft (ca. 150 Wörter).
+
+Fazit: Ein pointiertes, offenes Ende (ca. 100 Wörter).
+
+Stil: Vermeide einfache Aufzählungen. Nutze Einschübe, rhetorische Fragen und ein breites Vokabular (z.B. "Dichotomie", "Paradigma", "implizieren").
+
+2. Erstellung der Englischen Mediation Task (Anlehung an Abi 2025):
+
+Scenario: Erstelle einen realistischen Kontext (z.B. ein britisches Online-Magazin für junge Erwachsene bittet um einen Beitrag).
+
+Task: Formuliere eine präzise Aufgabenstellung auf Englisch (Niveau B2/C1).
+
+Requirements: Definiere klar: Target audience, Text format (z.B. formal letter, blog post, article) und den Tone.
+
+Specific Points: Liste 4 komplexe inhaltliche Aspekte auf, die aus dem deutschen Text in das Englische übertragen werden müssen (kein bloßes Übersetzen, sondern Zusammenfassen/Erklären).
+
+Wichtig: Bitte gib am Ende des deutschen Textes die Wortzahl an.
         
         OUTPUT FORMAT:
         Antworte NUR mit reinem JSON in folgendem Format:
