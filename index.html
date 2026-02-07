@@ -374,6 +374,11 @@
     // LEHRER-KONFIGURATION (ANTI-SCANNER-SCHUTZ & API KEY)
     // ======================================================
     
+    // ACHTUNG BEIM EINFÜGEN:
+    // Die Anführungszeichen "" müssen stehen bleiben!
+    // Der Key darf keine Leerzeichen enthalten.
+    // Hinter jedem Befehl muss ein Strichpunkt ; stehen.
+    
     // 1. Hälfte Ihres Keys (z.B. "sk-proj-12345..."):
     const KEY_PART_1 = "HIER_DIE_ERSTE_HAELFTE_DES_KEYS_EINFUEGEN"; 
     
@@ -387,7 +392,7 @@
     const COURSE_PASSWORD = "SAG_mediationstraining";
     
     const CONFIG = {
-        model: "gpt-4o", // High-End Modell (notwendig für Bilderkennung)
+        model: "gpt-4o", 
         storedData: {}
     };
 
@@ -396,9 +401,11 @@
     // ======================================================
 
     function checkPassword() {
-        const input = document.getElementById('accessPassword').value;
+        const input = document.getElementById('accessPassword').value.trim(); // .trim() entfernt Leerzeichen
         const error = document.getElementById('loginError');
         
+        console.log("Prüfe Passwort: " + input); // Für Debugging (F12)
+
         if (input === COURSE_PASSWORD) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-wrapper').style.display = 'flex';
@@ -410,6 +417,7 @@
 
     // --- INIT ---
     window.onload = function() {
+        // Prüfen ob bereits eingeloggt
         if(sessionStorage.getItem('is_authenticated') === 'true') {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-wrapper').style.display = 'flex';
@@ -431,10 +439,10 @@
         }
     }
 
-    // --- REPARIERTE FUNKTION: AUTOSAVE (MIT SAFETY CHECKS) ---
+    // --- REPARIERTE FUNKTION: AUTOSAVE ---
     function autoSave() {
         const textInput = document.getElementById('studentText');
-        if(!textInput) return; // Abbruch, wenn Textfeld fehlt
+        if(!textInput) return;
         
         const text = textInput.value;
         localStorage.setItem('student_text', text);
@@ -452,14 +460,13 @@
         document.getElementById('nav-'+id).classList.add('active');
     }
 
-    // --- REPARIERTE FUNKTION: BILD UPLOAD (MIT SAFETY CHECKS) ---
+    // --- REPARIERTE FUNKTION: BILD UPLOAD ---
     async function handleImageUpload() {
         const fileInput = document.getElementById('imageInput');
         const file = fileInput.files[0];
         
         if (!file) return;
         
-        // Safety Check: Prüfen ob Elemente existieren
         const loader = document.getElementById('ocrLoader');
         const status = document.getElementById('ocrStatus');
         const textArea = document.getElementById('studentText');
@@ -496,14 +503,12 @@
 
             const transcribedText = data.choices[0].message.content;
             
-            // Text sicher einfügen
             if(textArea) {
                 const currentContent = textArea.value;
                 const separator = currentContent ? "\n\n--- Handschrift Import ---\n\n" : "";
                 textArea.value = currentContent + separator + transcribedText;
             }
             
-            // Speichern (löst oft den Fehler aus, daher hier sicher aufrufen)
             autoSave(); 
             
             if(status) {
@@ -512,5 +517,4 @@
             }
 
         } catch (e) {
-            alert("Fehler beim Bild-Upload: " + e.message);
-            if(status) st
+            alert("Fehler 
