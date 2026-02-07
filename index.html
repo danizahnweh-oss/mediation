@@ -227,6 +227,21 @@
         }
 
         footer { text-align: center; padding: 2rem; color: #95a5a6; font-size: 0.9rem; margin-top: auto;}
+   /* --- NEU: DESIGN FÜR FOTO-UPLOAD --- */
+.photo-upload-area {
+    background: #eaf2f8;
+    border: 2px dashed #aed6f1;
+    padding: 1rem;
+    text-align: center;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+.photo-upload-area:hover {
+    background: #d6eaf8;
+    border-color: #3498db;
+}
+        
     </style>
 </head>
 <body>
@@ -316,6 +331,24 @@
                 <div class="task-box" style="font-size: 0.9rem; padding: 1rem;">
                     <em>Reminder Task:</em> <span id="tinyTaskReminder">...</span>
                 </div>
+                <!-- --- NEU: FOTO UPLOAD BEREICH --- -->
+<div class="photo-upload-area">
+    <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageUpload()">
+    
+    <button class="btn btn-outline" onclick="document.getElementById('imageInput').click()" style="border-radius: 20px; border-width: 2px;">
+        📸 Handschriftliches Foto hochladen
+    </button>
+    
+    <p style="font-size: 0.85rem; color: #555; margin-top: 8px;">
+        Das Foto wird von der KI analysiert und der Text automatisch unten eingefügt.
+    </p>
+    
+    <!-- Kleiner Ladebalken nur für OCR -->
+    <div id="ocrLoader" class="loader" style="width: 25px; height: 25px; margin: 10px auto; border-width: 3px;"></div>
+    <div id="ocrStatus" style="font-size: 0.9rem; font-weight: bold; color: var(--accent);"></div>
+</div>
+<!-- -------------------------------- -->
+                
 
                 <textarea id="studentText" placeholder="Start writing here..." oninput="autoSave()"></textarea>
                 
@@ -401,7 +434,83 @@
             renderExam(CONFIG.storedData);
         }
     }
+// --- NEU: BILD-UPLOAD & TEXTERKENNUNG (OCR) ---
+async function handleImageUpload() {
+    const fileInput = document.getElementById('imageInput');
+    const file = fileInput.files[0];
+    
+    if (!file) return;
+    
+    const loader = document.getElementById('ocrLoader');
+    const status = document.getElementById('ocrStatus');
+    const textArea = document.getElementById('studentText');
+    
+    loader.style.display = 'block';
+    status.innerText = "Bild wird analysiert... (bitte warten)";
+    
+    try {
+        const base64Image = await toBase64(file);
+        
+        // Anfrage an GPT-4o mit Vision-Funktion
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${TEACHER_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "gpt-4o", // Vision benötigt zwingend gpt-4o
+                messages: [
+                    {
+                        role: "user",
+                        content: [
+                            { type: "text", text: "Transcribe the handwritten text in this image exactly as it is written. Do not correct any grammar or spelling mistakes. Just transcribe the raw text." },
+                            { type: "image_url", image_url: { url: base64Image } }
+                        ]
+                    }
+                ],
+                max_tokens: 1500
+            })
+        });
 
+        const data = await response.json();
+        
+        if (data.error) throw new Error(data.error.message);
+
+        const transcribedText = data.choices[0].message.content;
+        
+        // Text anhängen (mit Trennstrich, falls schon Text da ist)
+        const currentContent = textArea.value;
+        const separator = currentContent ? "\n\n--- Handschrift Import ---\n\n" : "";
+        
+        textArea.value = currentContent + separator + transcribedText;
+        
+        // Speichern und Wortzahl aktualisieren
+        autoSave();
+        
+        status.innerText = "✅ Fertig! Text wurde eingefügt.";
+        status.style.color = "green";
+        setTimeout(() => { status.innerText = ""; }, 4000);
+
+    } catch (e) {
+        alert("Fehler beim Bild-Upload: " + e.message);
+        status.innerText = "Fehler aufgetreten.";
+        status.style.color = "red";
+    } finally {
+        loader.style.display = 'none';
+        fileInput.value = ''; // Input zurücksetzen für nächsten Upload
+    }
+}
+
+// Hilfsfunktion: Bild in Code umwandeln
+const toBase64 = file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+});
+// ----------------------------------------------
+    
     function autoSave() {
         const text = document.getElementById('studentText').value;
         localStorage.setItem('student_text', text);
