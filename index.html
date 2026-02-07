@@ -304,7 +304,7 @@
                         Der Text wird hier erscheinen...
                     </div>
                     <!-- Robust Word Count Element -->
-                    <p style="text-align: right; color: #999; font-size: 0.8rem; margin-top: 1rem;">(Text adapted for educational purposes, approx. <span id="wordCountLabel">0</span> words)</p>
+                    <p style="text-align: right; color: #999; font-size: 0.8rem; margin-top: 1rem;">(Text adapted for educational purposes</p>
                 </article>
             </section>
 
@@ -319,9 +319,7 @@
 
                 <textarea id="studentText" placeholder="Start writing here..." oninput="autoSave()"></textarea>
                 
-                <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
-                    <span>Wörter: <strong id="currentWordCount">0</strong></span>
-                    <div>
+            
                         <button class="btn btn-outline" onclick="printPDF()">Download PDF (Notizen)</button>
                         <button class="btn" onclick="submitForCorrection()">Abgeben & Korrigieren</button>
                     </div>
