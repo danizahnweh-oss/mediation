@@ -226,7 +226,7 @@
             margin-bottom: 1rem;
         }
 
-        /* Foto Upload Bereich */
+        /* Foto Upload Bereich Style */
         .photo-upload-area {
             background: #eaf2f8;
             border: 2px dashed #aed6f1;
@@ -332,14 +332,17 @@
                     <em>Reminder Task:</em> <span id="tinyTaskReminder">...</span>
                 </div>
                 
-                <!-- PHOTO UPLOAD AREA -->
+                <!-- NEW: PHOTO UPLOAD AREA -->
                 <div class="photo-upload-area">
                     <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageUpload()">
+                    
                     <button class="btn btn-outline" onclick="document.getElementById('imageInput').click()" style="border-radius: 20px;">
                         📸 Handschriftliches Foto hochladen
                     </button>
+                    
                     <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Das Foto wird automatisch in Text umgewandelt.</p>
-                    <div id="ocrLoader" class="loader" style="width: 25px; height: 25px; margin: 10px auto;"></div>
+                    
+                    <div id="ocrLoader" class="loader" style="width: 25px; height: 25px; margin: 10px auto; border-width: 3px;"></div>
                     <div id="ocrStatus" style="font-size: 0.9rem; font-weight: bold; color: var(--accent);"></div>
                 </div>
 
@@ -374,10 +377,8 @@
     // LEHRER-KONFIGURATION (ANTI-SCANNER-SCHUTZ & API KEY)
     // ======================================================
     
-    // ACHTUNG BEIM EINFÜGEN:
-    // Die Anführungszeichen "" müssen stehen bleiben!
-    // Der Key darf keine Leerzeichen enthalten.
-    // Hinter jedem Befehl muss ein Strichpunkt ; stehen.
+    // ACHTUNG: Behalten Sie die Anführungszeichen "" bei!
+    // Fügen Sie Ihren Key ohne Leerzeichen ein.
     
     // 1. Hälfte Ihres Keys (z.B. "sk-proj-12345..."):
     const KEY_PART_1 = "HIER_DIE_ERSTE_HAELFTE_DES_KEYS_EINFUEGEN"; 
@@ -392,7 +393,7 @@
     const COURSE_PASSWORD = "SAG_mediationstraining";
     
     const CONFIG = {
-        model: "gpt-4o", 
+        model: "gpt-4o", // High-End Modell (notwendig für Vision)
         storedData: {}
     };
 
@@ -401,11 +402,9 @@
     // ======================================================
 
     function checkPassword() {
-        const input = document.getElementById('accessPassword').value.trim(); // .trim() entfernt Leerzeichen
+        const input = document.getElementById('accessPassword').value.trim();
         const error = document.getElementById('loginError');
         
-        console.log("Prüfe Passwort: " + input); // Für Debugging (F12)
-
         if (input === COURSE_PASSWORD) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-wrapper').style.display = 'flex';
@@ -417,7 +416,6 @@
 
     // --- INIT ---
     window.onload = function() {
-        // Prüfen ob bereits eingeloggt
         if(sessionStorage.getItem('is_authenticated') === 'true') {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-wrapper').style.display = 'flex';
@@ -426,10 +424,12 @@
         const savedText = localStorage.getItem('student_text');
         if(savedText) {
             const el = document.getElementById('studentText');
-            if(el) el.value = savedText;
-            
-            const countEl = document.getElementById('currentWordCount');
-            if(countEl) countEl.innerText = countWords(savedText);
+            if(el) {
+                el.value = savedText;
+                // Initiale Zählung sicher durchführen
+                const countEl = document.getElementById('currentWordCount');
+                if(countEl) countEl.innerText = countWords(savedText);
+            }
         }
 
         const examData = localStorage.getItem('exam_data');
@@ -439,7 +439,7 @@
         }
     }
 
-    // --- REPARIERTE FUNKTION: AUTOSAVE ---
+    // --- AUTOSAVE (ROBUST) ---
     function autoSave() {
         const textInput = document.getElementById('studentText');
         if(!textInput) return;
@@ -460,7 +460,7 @@
         document.getElementById('nav-'+id).classList.add('active');
     }
 
-    // --- REPARIERTE FUNKTION: BILD UPLOAD ---
+    // --- BILD UPLOAD & OCR (ROBUST) ---
     async function handleImageUpload() {
         const fileInput = document.getElementById('imageInput');
         const file = fileInput.files[0];
@@ -507,14 +507,13 @@
                 const currentContent = textArea.value;
                 const separator = currentContent ? "\n\n--- Handschrift Import ---\n\n" : "";
                 textArea.value = currentContent + separator + transcribedText;
+                // Trigger autoSave to update word count and storage
+                autoSave();
             }
-            
-            autoSave(); 
             
             if(status) {
                 status.innerText = "✅ Fertig! Text wurde eingefügt.";
                 setTimeout(() => { if(status) status.innerText = ""; }, 4000);
             }
 
-        } catch (e) {
-            alert("Fehler 
+        } catch (e) 
