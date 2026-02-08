@@ -278,7 +278,7 @@
             <!-- 1. SETUP SECTION -->
             <section id="setup" class="active">
                 <h2>Prüfungskonfiguration</h2>
-                <div class="status-pill">✓ API Key ist vom Lehrer vorkonfiguriert</div>
+               
                 
                 <p>Wählen Sie ein Themenfeld. Das System generiert eine <strong>neue, einzigartige Prüfung</strong> auf Abitur-Niveau.</p>
                 
@@ -332,7 +332,7 @@
                     <em>Reminder Task:</em> <span id="tinyTaskReminder">...</span>
                 </div>
                 
-                <!-- NEW: PHOTO UPLOAD AREA -->
+                <!-- PHOTO UPLOAD AREA -->
                 <div class="photo-upload-area">
                     <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageUpload()">
                     
@@ -381,10 +381,10 @@
     // Fügen Sie Ihren Key ohne Leerzeichen ein.
     
     // 1. Hälfte Ihres Keys (z.B. "sk-proj-12345..."):
-    const KEY_PART_1 = "HIER_DIE_ERSTE_HAELFTE_DES_KEYS_EINFUEGEN"; 
+    const KEY_PART_1 = "sk-proj-SVyGmuEr5Kh-k5m11dDeDDOYUkftO0b_PvD-AWhgRAYesTq0XzodDkWaoYSBrMn4xUKAHkd6"; 
     
     // 2. Hälfte Ihres Keys (der Rest):
-    const KEY_PART_2 = "HIER_DIE_ZWEITE_HAELFTE_DES_KEYS_EINFUEGEN";
+    const KEY_PART_2 = "MAT3BlbkFJSnNJY-nBq2OF_pz6kW8flrAe28gQl7YTUtGgKHM5l7f43sniQPXH0nfisQdjKRUbjpujiE9iMA";
     
     // Das System baut den Key hier automatisch zusammen:
     const TEACHER_API_KEY = KEY_PART_1 + KEY_PART_2;
@@ -393,7 +393,7 @@
     const COURSE_PASSWORD = "SAG_mediationstraining";
     
     const CONFIG = {
-        model: "gpt-4o", // High-End Modell (notwendig für Vision)
+        model: "gpt-5.1", // High-End Modell (notwendig für Vision)
         storedData: {}
     };
 
@@ -516,4 +516,261 @@
                 setTimeout(() => { if(status) status.innerText = ""; }, 4000);
             }
 
-        } catch (e) 
+        } catch (e) {
+            alert("Fehler beim Bild-Upload: " + e.message);
+            if(status) status.innerText = "Fehler aufgetreten.";
+        } finally {
+            if(loader) loader.style.display = 'none';
+            if(fileInput) fileInput.value = '';
+        }
+    }
+
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+
+    // --- 1. GENERIERUNG (MIT NEUEM PROMPT) ---
+    async function generateExam() {
+        const topic = document.getElementById('topicSelect').value;
+        const errorBox = document.getElementById('setupError');
+        
+        if(TEACHER_API_KEY.includes("HIER_DIE_ERSTE") || TEACHER_API_KEY.length < 20) {
+             errorBox.style.display = 'block';
+             errorBox.innerText = "Fehler: Der Lehrer hat den API Key noch nicht im Code hinterlegt.";
+             return;
+        }
+
+        errorBox.style.display = 'none';
+        document.getElementById('setupLoader').style.display = 'block';
+
+        const prompt = `
+Du bist ein Experte für das bayerische Abitur im Fach Englisch. Erstelle eine Mediation-Prüfungsaufgabe.
+
+Deine Aufgabe:
+  Rolle: Du bist ein hochqualifizierter Redakteur für das Feuilleton einer großen deutschen Wochenzeitung (wie DIE ZEIT oder FAZ). Dein Schreibstil ist intellektuell anspruchsvoll, metaphorisch reich und nutzt komplexe Satzgefüge (Hypotaxen).
+  
+1. Erstellung des deutschen Quelltextes (MINDESTENS 600 - 800 WÖRTER):
+
+THEMA: ${topic}
+
+Strikte Längenvorgabe: Der Text muss absolut mindestens 600 Wörter lang sein. Wenn er kürzer ist, ist die Aufgabe fehlgeschlagen.
+
+Strukturzwang für die Länge: Um die Wortzahl zu erreichen, gliedere den Text zwingend in folgende 5 Abschnitte:
+
+Ein aktuelles, lebendiges Szenario oder eine historische Analogie (ca. 100 Wörter).
+
+Detaillierte Analyse der gegenwärtigen Situation mit mindestens zwei fiktiven Expertenmeinungen (ca. 150-200 Wörter).
+
+Ein ausführlicher Exkurs über die Risiken oder moralischen Bedenken, unter Verwendung gehobener Vokabeln (ca. 150-200 Wörter).
+
+Eine tiefschürfende Reflexion über die langfristigen Folgen für die Gesellschaft (ca. 150 Wörter).
+
+Ein pointiertes, offenes Ende (ca. 100 Wörter).
+
+Stil: Vermeide einfache Aufzählungen. Nutze Einschübe, rhetorische Fragen und ein breites Vokabular (z.B. "Dichotomie", "Paradigma", "implizieren").
+
+2. Erstellung der Englischen Mediation Task (Authentic Scenario):
+
+Stil-Vorgabe: Schreibe die Aufgabenstellung exakt nach dem Vorbild bayerischer Abiturprüfungen (klarer Kontext, direkte Ansprache, keine ausschweifenden Erklärungen).
+
+Struktur der Task:
+
+Context: Beschreibe eine konkrete Situation, in der der Schüler ehrenamtlich tätig ist oder an einem Projekt teilnimmt (z.B. "The Youth Project", "International Volunteer at a National Park", "Global Student Exchange Platform").
+
+The Mission: Erkläre, warum der Text geschrieben werden muss (z. B. eine Website-Präsentation, ein Blog-Beitrag für eine internationale Community oder ein Artikel für ein Partnerprojekt).
+
+Specific Requirements: Nenne die Zielgruppe, die Textsorte (z. B. blog entry, article) und das Ziel des Textes.
+
+Content Points: Liste 3 bis 4 präzise Aspekte auf, die aus dem deutschen Text (Teil 1) herausgearbeitet werden müssen. Nutze Formulierungen wie: "Write an article/blog entry on... and what measures..."
+
+Beispiel-Niveau: Orientiere dich sprachlich an den Beispielen: "You have come across... You decide to write..." oder "All the international volunteers have been asked to present..."
+Hier ist eine Bespielaufgabe, orientiere dich vom Stil an dieser:
+Aufgabe zum Text
+You are volunteering at Exmoor National Park, which was designated the first “International Dark
+Sky Reserve” in Europe in 2011. All the international volunteers have been asked to present the
+role light at night plays in their home country on the park’s website.
+Write an article on how light affects people and the natural world at night in Germany and what
+measures are being taken or considered to reduce light pollution.
+        OUTPUT FORMAT:
+        Antworte NUR mit reinem JSON in folgendem Format:
+        {
+          "headline": "Titel des Artikels",
+          "article_text": "Der komplette deutsche Text...",
+          "task_instruction": "Die komplette englische Aufgabenstellung..."
+        }
+        `;
+
+        try {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${TEACHER_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: CONFIG.model,
+                    messages: [
+                        {role: "system", content: "You are an exam creator for the German Abitur (Bavaria). Return valid JSON only."},
+                        {role: "user", content: prompt}
+                    ],
+                    temperature: 0.7
+                })
+            });
+
+            if (!response.ok) throw new Error("API Fehler (Quota oder Key ungültig)");
+
+            const data = await response.json();
+            let contentStr = data.choices[0].message.content.replace(/```json/g, '').replace(/```/g, '').trim();
+            const content = JSON.parse(contentStr);
+
+            CONFIG.storedData = content;
+            localStorage.setItem('exam_data', JSON.stringify(content));
+
+            renderExam(content);
+            nav('task');
+
+        } catch (e) {
+            errorBox.style.display = 'block';
+            errorBox.innerText = "Fehler: " + e.message;
+        } finally {
+            document.getElementById('setupLoader').style.display = 'none';
+        }
+    }
+
+    // --- RENDERING (ROBUST) ---
+    function renderExam(data) {
+        if(document.getElementById('taskInstruction')) {
+             document.getElementById('taskInstruction').innerText = data.task_instruction;
+        }
+        
+        if(document.getElementById('tinyTaskReminder')) {
+            document.getElementById('tinyTaskReminder').innerText = data.task_instruction.substring(0, 100) + "...";
+        }
+
+        if(document.getElementById('articleTitle')) {
+            document.getElementById('articleTitle').innerText = data.headline;
+        }
+        
+        if(document.getElementById('articleBody')) {
+            const formattedText = data.article_text.split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('');
+            document.getElementById('articleBody').innerHTML = formattedText;
+        }
+        
+        if(document.getElementById('wordCountLabel')) {
+            document.getElementById('wordCountLabel').innerText = countWords(data.article_text);
+        }
+    }
+
+    // --- 2. KORREKTUR (MIT NEUEM BEWERTUNGSRATING) ---
+    async function submitForCorrection() {
+        const text = document.getElementById('studentText').value;
+
+        if(text.split(' ').length < 50) {
+            alert("Ihr Text ist zu kurz.");
+            return;
+        }
+
+        nav('feedback');
+        document.getElementById('feedbackLoader').style.display = 'block';
+        document.getElementById('feedbackContent').innerHTML = "";
+
+        const rubric = `
+Rolle: Du bist ein erfahrener Englischlehrer an einem bayerischen Gymnasium. Deine Aufgabe ist es, eine Schülerleistung im Bereich Sprachmittlung (Mediation) basierend auf einem offiziellen Bewertungsraster zu evaluieren.
+Bewertungslogik: Die Bewertung teilt sich in zwei Bereiche:
+ 
+Inhalt und Textstruktur (max. 4 Bewertungseinheiten - BE) 
+ 
+Sprache (max. 6 Bewertungseinheiten - BE) 
+ 
+Bitte bewerte den vorliegenden Schülertext nach folgenden Kriterien:
+ 
+1. Inhalt und Textstruktur (0–4 BE)
+ 
+4 BE (Sehr gut): Aufgabenstellung gemäß Operator umfassend, vollständig und korrekt erfüllt. Klar strukturierte, redundanzfreie Wiedergabe aller Informationen. Kommunikationssituation (Adressat, Textsorte) durchgehend überzeugend. Geschickte Umschreibungsstrategien.
+ 
+3 BE (Gut): Wesentliche Informationen meist strukturiert und korrekt wiedergegeben. Kommunikationssituation meist überzeugend. In der Regel gelungene Umschreibungsstrategien.
+ 
+2 BE (Befriedigend/Ausreichend): Nur teilweise strukturiert, Informationen nicht immer vollständig/korrekt. Adressatenbezug nur zum Teil umgesetzt. Umschreibungsstrategien nur stellenweise gelungen.
+ 
+1 BE (Mangelhaft): Weitgehend unvollständig, wenig strukturiert oder fehlerhaft. Kommunikationssituation kaum beachtet.
+ 
+0 BE (Ungenügend): Aufgabenstellung nicht erfüllt, gravierende Lücken, fehlende Struktur, falsche Textsorte.
+ 
+2. Sprache (0–6 BE)
+ 
+6 BE: Nahezu fehlerfrei. Breites Repertoire an Grammatik, Wortschatz, Syntax und Idiomatik. Sehr treffende Gestaltung.
+ 
+5 BE: Meist fehlerfrei (leichte Verstöße). Gefestigtes Repertoire, meist abwechslungsreich und treffend.
+ 
+4 BE: Mehrere, zumeist leichte Verstöße; Verständlichkeit kaum beeinträchtigt. Angemessenes Repertoire, ansprechende Ausgestaltung.
+ 
+3 BE: Mehrere, teils gravierende Verstöße; Verständlichkeit insgesamt noch gewährleistet. Eingeschränktes Repertoire.
+ 
+2 BE: Viele gravierende Verstöße; Verständlichkeit stellenweise deutlich beeinträchtigt. Deutlich eingeschränktes Repertoire.
+ 
+1 BE: Sehr viele/häufig gravierende Fehler; Verständlichkeit insgesamt beeinträchtigt. Stark eingeschränktes Ausdrucksvermögen.
+ 
+0 BE: Äußerst gravierende Mängel; Text unverständlich.
+ 
+Output-Format:
+ 
+Punktzahl: Nenne die BE für Inhalt und Sprache separat.
+ 
+Begründung: Erläutere kurz pro Bereich, warum die Punktzahl vergeben wurde (bezugnehmend auf Fachbegriffe wie redundanzfrei, Adressatenbezug oder Sprachrichtigkeit).
+ 
+Korrekturhinweise: Liste spezifische sprachliche Fehler oder inhaltliche Lücken auf.
+        Gib das Feedback in Markdown Format:
+        # Bewertungsergebnis
+        **Gesamtpunktzahl: [Punkte]/10 BE**
+        ## Inhalt ([Punkte]/4 BE)
+        ## Sprache ([Punkte]/6 BE)
+        ## Tipps
+        `;
+
+        try {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TEACHER_API_KEY}` },
+                body: JSON.stringify({
+                    model: CONFIG.model,
+                    messages: [
+                        {role: "system", content: "You are a strict teacher grading a German Abitur exam."},
+                        {role: "user", content: `Original: ${CONFIG.storedData.article_text}\nTask: ${CONFIG.storedData.task_instruction}\nStudent: ${text}\n\n${rubric}`}
+                    ]
+                })
+            });
+
+            const data = await response.json();
+            const feedback = data.choices[0].message.content;
+            document.getElementById('feedbackContent').innerHTML = marked.parse(feedback);
+
+        } catch (e) {
+            document.getElementById('feedbackContent').innerHTML = `<p style="color:red">Fehler: ${e.message}</p>`;
+        } finally {
+            document.getElementById('feedbackLoader').style.display = 'none';
+        }
+    }
+
+    function countWords(str) {
+        if(!str) return 0;
+        return str.trim().split(/\s+/).filter(a => a).length;
+    }
+
+    function printPDF() {
+        const element = document.createElement('div');
+        element.innerHTML = `
+            <h2>Mediation Submission</h2>
+            <p><strong>Topic:</strong> ${document.getElementById('topicSelect').value}</p>
+            <div style="border:1px solid #000; padding: 1rem; margin-top:1rem;">
+                ${document.getElementById('studentText').value.replace(/\n/g, '<br>')}
+            </div>
+        `;
+        html2pdf().from(element).save('mediation_abitur.pdf');
+    }
+</script>
+
+</body>
+</html>
