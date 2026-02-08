@@ -153,7 +153,7 @@
         @media(min-width: 800px) { .source-text { column-count: 2; column-gap: 3rem; } }
 
         /* Forms & Inputs */
-        input[type="text"], input[type="password"], select {
+        input[type="text"], input[type="password"], input[type="number"], select {
             padding: 0.8rem;
             border: 1px solid #bdc3c7;
             border-radius: 4px;
@@ -278,7 +278,7 @@
             <!-- 1. SETUP SECTION -->
             <section id="setup" class="active">
                 <h2>Prüfungskonfiguration</h2>
-               
+                <div class="status-pill">✓ API Key ist vom Lehrer vorkonfiguriert</div>
                 
                 <p>Wählen Sie ein Themenfeld. Das System generiert eine <strong>neue, einzigartige Prüfung</strong> auf Abitur-Niveau.</p>
                 
@@ -293,7 +293,13 @@
                         <option value="The World of Work: Automation and Digitalization">The World of Work (Future Jobs)</option>
                     </select>
                     
-                    <br><br>
+                    <br>
+                    
+                    <label><strong>Länge des Quelltextes (Wörter)</strong></label><br>
+                    <input type="number" id="sourceLength" value="600" min="200" max="1500" step="50" placeholder="z.B. 600">
+                    <p style="font-size: 0.8rem; color: #666; margin-top: -10px;">Empfohlen für Q13: 600-800 Wörter</p>
+                    
+                    <br>
                     
                     <button class="btn" onclick="generateExam()">Prüfung erstellen</button>
                     
@@ -380,11 +386,12 @@
     // ACHTUNG: Behalten Sie die Anführungszeichen "" bei!
     // Fügen Sie Ihren Key ohne Leerzeichen ein.
     
-    // 1. Hälfte Ihres Keys (z.B. "sk-proj-12345..."):
+       // 1. Hälfte Ihres Keys (z.B. "sk-proj-12345..."):
     const KEY_PART_1 = "sk-proj-SVyGmuEr5Kh-k5m11dDeDDOYUkftO0b_PvD-AWhgRAYesTq0XzodDkWaoYSBrMn4xUKAHkd6"; 
     
     // 2. Hälfte Ihres Keys (der Rest):
     const KEY_PART_2 = "MAT3BlbkFJSnNJY-nBq2OF_pz6kW8flrAe28gQl7YTUtGgKHM5l7f43sniQPXH0nfisQdjKRUbjpujiE9iMA";
+
     
     // Das System baut den Key hier automatisch zusammen:
     const TEACHER_API_KEY = KEY_PART_1 + KEY_PART_2;
@@ -393,7 +400,7 @@
     const COURSE_PASSWORD = "SAG_mediationstraining";
     
     const CONFIG = {
-        model: "gpt-5.1", // High-End Modell (notwendig für Vision)
+        model: "gpt-5.2", // High-End Modell (notwendig für Vision)
         storedData: {}
     };
 
@@ -532,9 +539,11 @@
         reader.onerror = error => reject(error);
     });
 
-    // --- 1. GENERIERUNG (MIT NEUEM PROMPT) ---
+    // --- 1. GENERIERUNG (MIT VARIABLEM WORT-ZIEL) ---
     async function generateExam() {
         const topic = document.getElementById('topicSelect').value;
+        // Hier holen wir die gewünschte Länge
+        const length = document.getElementById('sourceLength').value || 600;
         const errorBox = document.getElementById('setupError');
         
         if(TEACHER_API_KEY.includes("HIER_DIE_ERSTE") || TEACHER_API_KEY.length < 20) {
@@ -552,23 +561,13 @@ Du bist ein Experte für das bayerische Abitur im Fach Englisch. Erstelle eine M
 Deine Aufgabe:
   Rolle: Du bist ein hochqualifizierter Redakteur für das Feuilleton einer großen deutschen Wochenzeitung (wie DIE ZEIT oder FAZ). Dein Schreibstil ist intellektuell anspruchsvoll, metaphorisch reich und nutzt komplexe Satzgefüge (Hypotaxen).
   
-1. Erstellung des deutschen Quelltextes (MINDESTENS 600 - 800 WÖRTER):
+1. Erstellung des deutschen Quelltextes (CA. ${length} WÖRTER):
 
 THEMA: ${topic}
 
-Strikte Längenvorgabe: Der Text muss absolut mindestens 600 Wörter lang sein. Wenn er kürzer ist, ist die Aufgabe fehlgeschlagen.
+Strikte Längenvorgabe: Der Text muss ca. ${length} Wörter lang sein. Richte den Inhalt so aus, dass diese Länge sinnvoll erreicht wird.
 
-Strukturzwang für die Länge: Um die Wortzahl zu erreichen, gliedere den Text zwingend in folgende 5 Abschnitte:
-
-Ein aktuelles, lebendiges Szenario oder eine historische Analogie (ca. 100 Wörter).
-
-Detaillierte Analyse der gegenwärtigen Situation mit mindestens zwei fiktiven Expertenmeinungen (ca. 150-200 Wörter).
-
-Ein ausführlicher Exkurs über die Risiken oder moralischen Bedenken, unter Verwendung gehobener Vokabeln (ca. 150-200 Wörter).
-
-Eine tiefschürfende Reflexion über die langfristigen Folgen für die Gesellschaft (ca. 150 Wörter).
-
-Ein pointiertes, offenes Ende (ca. 100 Wörter).
+Struktur für die Länge: Um die Wortzahl zu erreichen, gliedere den Text sinnvoll (z.B. Einleitung/Szenario, Analyse, Expertenmeinungen, Reflexion, Fazit).
 
 Stil: Vermeide einfache Aufzählungen. Nutze Einschübe, rhetorische Fragen und ein breites Vokabular (z.B. "Dichotomie", "Paradigma", "implizieren").
 
@@ -584,9 +583,9 @@ The Mission: Erkläre, warum der Text geschrieben werden muss (z. B. eine Websit
 
 Specific Requirements: Nenne die Zielgruppe, die Textsorte (z. B. blog entry, article) und das Ziel des Textes.
 
-Liste 2 bis 4 präzise Aspekte auf, die aus dem deutschen Text (Teil 1) herausgearbeitet werden müssen. Nutze Formulierungen wie: "Write an article/blog entry on... and what measures...". 
-Bitte Nutze aber nur ganze Sätze und nutze keine Bulletpoints.
+Content Points: Liste 3 bis 4 präzise Aspekte auf, die aus dem deutschen Text (Teil 1) herausgearbeitet werden müssen. Nutze Formulierungen wie: "Write an article/blog entry on... and what measures..."
 
+Beispiel-Niveau: Orientiere dich sprachlich an den Beispielen: "You have come across... You decide to write..." oder "All the international volunteers have been asked to present..."
 Hier ist eine Bespielaufgabe, orientiere dich vom Stil an dieser:
 Aufgabe zum Text
 You are volunteering at Exmoor National Park, which was designated the first “International Dark
