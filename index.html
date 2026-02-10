@@ -194,6 +194,36 @@
             box-sizing: border-box;
         }
         textarea:focus { outline: 2px solid var(--accent); background: white; }
+        
+        .manual-input textarea {
+            min-height: 150px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        /* Mode Switcher */
+        .mode-switch {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: #f0f3f5;
+            padding: 0.5rem;
+            border-radius: 8px;
+            display: inline-flex;
+        }
+        .mode-btn {
+            background: transparent;
+            color: var(--secondary);
+            box-shadow: none;
+            margin: 0;
+            border: 2px solid transparent;
+        }
+        .mode-btn.active {
+            background: white;
+            color: var(--accent);
+            border-color: #ddd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
 
         /* Feedback Area */
         .feedback-container h1, .feedback-container h2, .feedback-container h3 { margin-top: 1.5rem; }
@@ -215,17 +245,6 @@
 
         .error-msg { color: var(--warning); background: #fadbd8; padding: 1rem; border-radius: 4px; display: none; margin-top: 1rem;}
         
-        .status-pill {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            background: #e0f7fa;
-            color: #006064;
-            margin-bottom: 1rem;
-        }
-
         /* Foto Upload Bereich Style */
         .photo-upload-area {
             background: #eaf2f8;
@@ -239,6 +258,13 @@
         .photo-upload-area:hover {
             background: #d6eaf8;
             border-color: #3498db;
+        }
+        
+        .scan-btn-small {
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+            border-radius: 20px;
+            margin-top: 5px;
         }
 
         footer { text-align: center; padding: 2rem; color: #95a5a6; font-size: 0.9rem; margin-top: auto;}
@@ -278,34 +304,74 @@
             <!-- 1. SETUP SECTION -->
             <section id="setup" class="active">
                 <h2>Prüfungskonfiguration</h2>
-               
-                
-                <p>Wählen Sie ein Themenfeld. Das System generiert eine <strong>neue, einzigartige Prüfung</strong> auf Abitur-Niveau.</p>
-                
-                <div style="background: #fff; border: 1px solid #eee; padding: 2rem; border-radius: 8px;">
-                    
-                    <label><strong>Themenfeld (Abiturjahrgang 2025/26)</strong></label><br>
-                    <select id="topicSelect">
-                        <option value="Science and Technology: Visions of the future, Utopia vs. Dystopia">Science & Technology (Utopia vs. Dystopia)</option>
-                        <option value="Global Chances and Challenges: Sustainability">Global Chances (Sustainability & Environment)</option>
-                        <option value="The Media: Impact on individual and society">The Media (Influence & Manipulation)</option>
-                        <option value="Politics and Society: UK/USA tradition and change">UK/USA: Tradition & Change</option>
-                        <option value="The World of Work: Automation and Digitalization">The World of Work (Future Jobs)</option>
-                    </select>
-                    
-                    <br>
-                    
-                    <label><strong>Länge des Quelltextes (Wörter)</strong></label><br>
-                    <input type="number" id="sourceLength" value="600" min="200" max="1500" step="50" placeholder="z.B. 600">
-                    <p style="font-size: 0.8rem; color: #666; margin-top: -10px;">Empfohlen für Q13: 600-800 Wörter</p>
-                    
-                    <br>
-                    
-                    <button class="btn" onclick="generateExam()">Prüfung erstellen</button>
-                    
-                    <div id="setupLoader" class="loader"></div>
-                    <div id="setupError" class="error-msg"></div>
+                <br>
+
+                <!-- MODE SWITCHER -->
+                <div class="mode-switch">
+                    <button class="btn mode-btn active" id="btn-mode-gen" onclick="setMode('gen')">✨ Neue Prüfung generieren (AI)</button>
+                    <button class="btn mode-btn" id="btn-mode-up" onclick="setMode('upload')">📂 Eigene Aufgabe nutzen (Upload)</button>
                 </div>
+                
+                <!-- CONTAINER A: AI GENERATOR -->
+                <div id="setup-generator">
+                    <p>Wählen Sie ein Themenfeld. Das System generiert eine <strong>neue, einzigartige Prüfung</strong> auf Abitur-Niveau.</p>
+                    
+                    <div style="background: #fff; border: 1px solid #eee; padding: 2rem; border-radius: 8px;">
+                        <label><strong>Themenfeld (Abiturjahrgang 2025/26)</strong></label><br>
+                        <select id="topicSelect">
+                            <option value="Science and Technology: Visions of the future, Utopia vs. Dystopia">Science & Technology (Utopia vs. Dystopia)</option>
+                            <option value="Global Chances and Challenges: Sustainability">Global Chances (Sustainability & Environment)</option>
+                            <option value="The Media: Impact on individual and society">The Media (Influence & Manipulation)</option>
+                            <option value="Politics and Society: UK/USA tradition and change">UK/USA: Tradition & Change</option>
+                            <option value="The World of Work: Automation and Digitalization">The World of Work (Future Jobs)</option>
+                        </select>
+                        <br>
+                        <label><strong>Länge des Quelltextes (Wörter)</strong></label><br>
+                        <input type="number" id="sourceLength" value="600" min="200" max="1500" step="50">
+                        <br>
+                        <button class="btn" onclick="generateExam()">Prüfung generieren</button>
+                    </div>
+                </div>
+
+                <!-- CONTAINER B: MANUAL UPLOAD -->
+                <div id="setup-upload" style="display:none">
+                    <p>Fügen Sie hier eine alte Klausur oder ein Übungsblatt ein (Text kopieren oder <strong>abfotografieren</strong>).</p>
+                    
+                    <div style="background: #fff; border: 1px solid #eee; padding: 2rem; border-radius: 8px;">
+                        
+                        <label><strong>1. Titel der Aufgabe</strong></label>
+                        <input type="text" id="manualHeadline" placeholder="z.B. Abitur 2023 - Text A">
+                        
+                        <br><br>
+                        <label><strong>2. Deutscher Quelltext</strong></label>
+                        <div class="manual-input">
+                            <!-- Helper for OCR -->
+                            <input type="file" id="scanInputSource" accept="image/*" style="display:none" onchange="performOCR('scanInputSource', 'manualSourceText', 'ocrLoaderSetup', 'ocrStatusSetup')">
+                            <button class="btn btn-outline scan-btn-small" onclick="document.getElementById('scanInputSource').click()">📸 Foto scannen (Text)</button>
+                            
+                            <textarea id="manualSourceText" placeholder="Fügen Sie hier den deutschen Text ein..."></textarea>
+                        </div>
+
+                        <br>
+                        <label><strong>3. Englische Aufgabenstellung (Task)</strong></label>
+                        <div class="manual-input">
+                            <!-- Helper for OCR -->
+                            <input type="file" id="scanInputTask" accept="image/*" style="display:none" onchange="performOCR('scanInputTask', 'manualTask', 'ocrLoaderSetup', 'ocrStatusSetup')">
+                            <button class="btn btn-outline scan-btn-small" onclick="document.getElementById('scanInputTask').click()">📸 Foto scannen (Task)</button>
+                            
+                            <textarea id="manualTask" placeholder="z.B. Write an article mediating the text..."></textarea>
+                        </div>
+
+                        <div id="ocrLoaderSetup" class="loader" style="width:25px; height:25px; margin: 10px 0;"></div>
+                        <div id="ocrStatusSetup" style="font-size:0.9rem; color:var(--accent);"></div>
+
+                        <br>
+                        <button class="btn" onclick="useManualTask()">Diese Aufgabe nutzen</button>
+                    </div>
+                </div>
+
+                <div id="setupLoader" class="loader"></div>
+                <div id="setupError" class="error-msg"></div>
             </section>
 
             <!-- 2. TASK SECTION -->
@@ -313,7 +379,7 @@
                 <h2>Mediation Task</h2>
                 <div class="task-box">
                     <strong>Task:</strong>
-                    <div id="taskInstruction" style="white-space: pre-wrap;">Bitte zuerst Prüfung generieren.</div>
+                    <div id="taskInstruction" style="white-space: pre-wrap;">Bitte zuerst Prüfung erstellen.</div>
                 </div>
                 
                 <hr style="border: 0; border-top: 1px solid #eee; margin: 2rem 0;">
@@ -324,8 +390,7 @@
                     <div id="articleBody" class="source-text">
                         Der Text wird hier erscheinen...
                     </div>
-                    <!-- Robust Word Count Element -->
-                    <p style="text-align: right; color: #999; font-size: 0.8rem; margin-top: 1rem;">(Text adapted for educational purposes, approx. <span id="wordCountLabel">0</span> words)</p>
+                    <p style="text-align: right; color: #999; font-size: 0.8rem; margin-top: 1rem;">(Approx. <span id="wordCountLabel">0</span> words)</p>
                 </article>
             </section>
 
@@ -338,18 +403,18 @@
                     <em>Reminder Task:</em> <span id="tinyTaskReminder">...</span>
                 </div>
                 
-                <!-- PHOTO UPLOAD AREA -->
+                <!-- PHOTO UPLOAD AREA (STUDENT) -->
                 <div class="photo-upload-area">
-                    <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleImageUpload()">
+                    <input type="file" id="imageInputStudent" accept="image/*" style="display:none" onchange="performOCR('imageInputStudent', 'studentText', 'ocrLoaderStudent', 'ocrStatusStudent')">
                     
-                    <button class="btn btn-outline" onclick="document.getElementById('imageInput').click()" style="border-radius: 20px;">
+                    <button class="btn btn-outline" onclick="document.getElementById('imageInputStudent').click()" style="border-radius: 20px;">
                         📸 Handschriftliches Foto hochladen
                     </button>
                     
                     <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Das Foto wird automatisch in Text umgewandelt.</p>
                     
-                    <div id="ocrLoader" class="loader" style="width: 25px; height: 25px; margin: 10px auto; border-width: 3px;"></div>
-                    <div id="ocrStatus" style="font-size: 0.9rem; font-weight: bold; color: var(--accent);"></div>
+                    <div id="ocrLoaderStudent" class="loader" style="width: 25px; height: 25px; margin: 10px auto; border-width: 3px;"></div>
+                    <div id="ocrStatusStudent" style="font-size: 0.9rem; font-weight: bold; color: var(--accent);"></div>
                 </div>
 
                 <textarea id="studentText" placeholder="Tippen Sie hier oder laden Sie ein Foto hoch..." oninput="autoSave()"></textarea>
@@ -380,27 +445,20 @@
 
 <script>
     // ======================================================
-    // LEHRER-KONFIGURATION (ANTI-SCANNER-SCHUTZ & API KEY)
+    // LEHRER-KONFIGURATION
     // ======================================================
     
-    // ACHTUNG: Behalten Sie die Anführungszeichen "" bei!
-    // Fügen Sie Ihren Key ohne Leerzeichen ein.
+    // 1. Hälfte Ihres Keys:
+    const KEY_PART_1 = "HIER_DIE_ERSTE_HAELFTE_DES_KEYS_EINFUEGEN"; 
     
-       // 1. Hälfte Ihres Keys (z.B. "sk-proj-12345..."):
-    const KEY_PART_1 = "sk-proj-SVyGmuEr5Kh-k5m11dDeDDOYUkftO0b_PvD-AWhgRAYesTq0XzodDkWaoYSBrMn4xUKAHkd6"; 
+    // 2. Hälfte Ihres Keys:
+    const KEY_PART_2 = "HIER_DIE_ZWEITE_HAELFTE_DES_KEYS_EINFUEGEN";
     
-    // 2. Hälfte Ihres Keys (der Rest):
-    const KEY_PART_2 = "MAT3BlbkFJSnNJY-nBq2OF_pz6kW8flrAe28gQl7YTUtGgKHM5l7f43sniQPXH0nfisQdjKRUbjpujiE9iMA";
-
-    
-    // Das System baut den Key hier automatisch zusammen:
     const TEACHER_API_KEY = KEY_PART_1 + KEY_PART_2;
-
-    // --- APP CONFIGURATION ---
     const COURSE_PASSWORD = "SAG_mediationstraining";
     
     const CONFIG = {
-        model: "gpt-5.2", // High-End Modell (notwendig für Vision)
+        model: "gpt-4o", 
         storedData: {}
     };
 
@@ -410,76 +468,67 @@
 
     function checkPassword() {
         const input = document.getElementById('accessPassword').value.trim();
-        const error = document.getElementById('loginError');
-        
         if (input === COURSE_PASSWORD) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-wrapper').style.display = 'flex';
             sessionStorage.setItem('is_authenticated', 'true');
         } else {
-            error.style.display = 'block';
+            document.getElementById('loginError').style.display = 'block';
         }
     }
 
-    // --- INIT ---
-    window.onload = function() {
-        if(sessionStorage.getItem('is_authenticated') === 'true') {
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app-wrapper').style.display = 'flex';
-        }
-
-        const savedText = localStorage.getItem('student_text');
-        if(savedText) {
-            const el = document.getElementById('studentText');
-            if(el) {
-                el.value = savedText;
-                // Initiale Zählung sicher durchführen
-                const countEl = document.getElementById('currentWordCount');
-                if(countEl) countEl.innerText = countWords(savedText);
-            }
-        }
-
-        const examData = localStorage.getItem('exam_data');
-        if(examData) {
-            CONFIG.storedData = JSON.parse(examData);
-            renderExam(CONFIG.storedData);
+    // --- MODE SWITCHING ---
+    function setMode(mode) {
+        if(mode === 'gen') {
+            document.getElementById('setup-generator').style.display = 'block';
+            document.getElementById('setup-upload').style.display = 'none';
+            document.getElementById('btn-mode-gen').classList.add('active');
+            document.getElementById('btn-mode-up').classList.remove('active');
+        } else {
+            document.getElementById('setup-generator').style.display = 'none';
+            document.getElementById('setup-upload').style.display = 'block';
+            document.getElementById('btn-mode-gen').classList.remove('active');
+            document.getElementById('btn-mode-up').classList.add('active');
         }
     }
 
-    // --- AUTOSAVE (ROBUST) ---
-    function autoSave() {
-        const textInput = document.getElementById('studentText');
-        if(!textInput) return;
+    // --- MANUAL UPLOAD LOGIC ---
+    function useManualTask() {
+        const headline = document.getElementById('manualHeadline').value;
+        const source = document.getElementById('manualSourceText').value;
+        const task = document.getElementById('manualTask').value;
+
+        if(!source || !task) {
+            alert("Bitte füllen Sie mindestens Quelltext und Aufgabenstellung aus.");
+            return;
+        }
+
+        const manualData = {
+            headline: headline || "Eigene Aufgabe",
+            article_text: source,
+            task_instruction: task
+        };
+
+        CONFIG.storedData = manualData;
+        localStorage.setItem('exam_data', JSON.stringify(manualData));
         
-        const text = textInput.value;
-        localStorage.setItem('student_text', text);
-        
-        const countElement = document.getElementById('currentWordCount');
-        if(countElement) {
-            countElement.innerText = countWords(text);
-        }
+        renderExam(manualData);
+        nav('task');
     }
 
-    function nav(id) {
-        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        document.getElementById('nav-'+id).classList.add('active');
-    }
-
-    // --- BILD UPLOAD & OCR (ROBUST) ---
-    async function handleImageUpload() {
-        const fileInput = document.getElementById('imageInput');
+    // --- GENERIC OCR FUNCTION (FOR SETUP & STUDENT) ---
+    async function performOCR(inputId, outputId, loaderId, statusId) {
+        const fileInput = document.getElementById(inputId);
         const file = fileInput.files[0];
         
         if (!file) return;
         
-        const loader = document.getElementById('ocrLoader');
-        const status = document.getElementById('ocrStatus');
-        const textArea = document.getElementById('studentText');
+        const loader = document.getElementById(loaderId);
+        const status = document.getElementById(statusId);
+        const textArea = document.getElementById(outputId);
         
         if(loader) loader.style.display = 'block';
-        if(status) status.innerText = "Bild wird analysiert... (bitte warten)";
+        if(status) status.innerText = "Scan läuft... (bitte warten)";
         
         try {
             const base64Image = await toBase64(file);
@@ -496,7 +545,7 @@
                         {
                             role: "user",
                             content: [
-                                { type: "text", text: "Transcribe the handwritten text in this image exactly as it is written. Do not correct grammar. Output raw text only." },
+                                { type: "text", text: "Transcribe the text in this image exactly. Do not translate. Output raw text only." },
                                 { type: "image_url", image_url: { url: base64Image } }
                             ]
                         }
@@ -511,20 +560,20 @@
             const transcribedText = data.choices[0].message.content;
             
             if(textArea) {
-                const currentContent = textArea.value;
-                const separator = currentContent ? "\n\n--- Handschrift Import ---\n\n" : "";
-                textArea.value = currentContent + separator + transcribedText;
-                // Trigger autoSave to update word count and storage
-                autoSave();
+                // If student workspace, append. If setup field, replace or append? 
+                // We'll append with a newline for better UX in both cases
+                const current = textArea.value;
+                textArea.value = current + (current ? "\n\n" : "") + transcribedText;
+                
+                // If it's the student text, trigger autosave
+                if(outputId === 'studentText') autoSave();
             }
             
-            if(status) {
-                status.innerText = "✅ Fertig! Text wurde eingefügt.";
-                setTimeout(() => { if(status) status.innerText = ""; }, 4000);
-            }
+            if(status) status.innerText = "✅ Scan erfolgreich!";
+            setTimeout(() => { if(status) status.innerText = ""; }, 3000);
 
         } catch (e) {
-            alert("Fehler beim Bild-Upload: " + e.message);
+            alert("Fehler beim Scan: " + e.message);
             if(status) status.innerText = "Fehler aufgetreten.";
         } finally {
             if(loader) loader.style.display = 'none';
@@ -539,10 +588,9 @@
         reader.onerror = error => reject(error);
     });
 
-    // --- 1. GENERIERUNG (MIT VARIABLEM WORT-ZIEL) ---
+    // --- AI GENERATION ---
     async function generateExam() {
         const topic = document.getElementById('topicSelect').value;
-        // Hier holen wir die gewünschte Länge
         const length = document.getElementById('sourceLength').value || 600;
         const errorBox = document.getElementById('setupError');
         
@@ -582,9 +630,8 @@ Context: Beschreibe eine konkrete Situation, in der der Schüler ehrenamtlich t�
 The Mission: Erkläre, warum der Text geschrieben werden muss (z. B. eine Website-Präsentation, ein Blog-Beitrag für eine internationale Community oder ein Artikel für ein Partnerprojekt).
 
 Specific Requirements: Nenne die Zielgruppe, die Textsorte (z. B. blog entry, article) und das Ziel des Textes.
+Es sollen immer 2 bis 4 präzise Aspekte aufgezeigt werden, die aus dem deutschen Text (Teil 1) herausgearbeitet werden müssen. Nutze Formulierungen wie: "Write an article/blog entry on... and what measures..."
 
-Liste 2 bis 4 präzise Aspekte auf, die aus dem deutschen Text (Teil 1) herausgearbeitet werden müssen. Nutze Formulierungen wie: "Write an article/blog entry on... and what measures..."
-Schreibe bitte in ganzen Sätzen und nutze keine Bullet points. 
 Beispiel-Niveau: Orientiere dich sprachlich an den Beispielen: "You have come across... You decide to write..." oder "All the international volunteers have been asked to present..."
 Hier ist eine Bespielaufgabe, orientiere dich vom Stil an dieser:
 Aufgabe zum Text
@@ -639,94 +686,68 @@ measures are being taken or considered to reduce light pollution.
         }
     }
 
-    // --- RENDERING (ROBUST) ---
+    // --- STANDARD RENDER & LOGIC ---
     function renderExam(data) {
         if(document.getElementById('taskInstruction')) {
              document.getElementById('taskInstruction').innerText = data.task_instruction;
         }
-        
         if(document.getElementById('tinyTaskReminder')) {
             document.getElementById('tinyTaskReminder').innerText = data.task_instruction.substring(0, 100) + "...";
         }
-
         if(document.getElementById('articleTitle')) {
             document.getElementById('articleTitle').innerText = data.headline;
         }
-        
         if(document.getElementById('articleBody')) {
             const formattedText = data.article_text.split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('');
             document.getElementById('articleBody').innerHTML = formattedText;
         }
-        
         if(document.getElementById('wordCountLabel')) {
             document.getElementById('wordCountLabel').innerText = countWords(data.article_text);
         }
     }
 
-    // --- 2. KORREKTUR (MIT NEUEM BEWERTUNGSRATING) ---
     async function submitForCorrection() {
         const text = document.getElementById('studentText').value;
-
-        if(text.split(' ').length < 50) {
-            alert("Ihr Text ist zu kurz.");
-            return;
-        }
+        if(text.split(' ').length < 50) { alert("Ihr Text ist zu kurz."); return; }
 
         nav('feedback');
         document.getElementById('feedbackLoader').style.display = 'block';
         document.getElementById('feedbackContent').innerHTML = "";
 
         const rubric = `
-Rolle: Du bist ein erfahrener und sehr anspruchsvoller Englischlehrer an einem bayerischen Gymnasium. Deine Aufgabe ist es, eine Schülerleistung im Bereich Sprachmittlung (Mediation) basierend auf einem offiziellen Bewertungsraster zu evaluieren.
+Rolle: Du bist ein erfahrener und strenger Englischlehrer an einem bayerischen Gymnasium. Deine Aufgabe ist es, eine Schülerleistung im Bereich Sprachmittlung (Mediation) basierend auf einem offiziellen Bewertungsraster zu evaluieren.
 Bewertungslogik: Die Bewertung teilt sich in zwei Bereiche:
- 
-Inhalt und Textstruktur (max. 4 Bewertungseinheiten - BE) 
- 
-Sprache (max. 6 Bewertungseinheiten - BE) 
- 
+Inhalt und Textstruktur (max. 4 Bewertungseinheiten - BE) 
+Sprache (max. 6 Bewertungseinheiten - BE) 
+
 Bitte bewerte den vorliegenden Schülertext nach folgenden Kriterien:
- 
+
 1. Inhalt und Textstruktur (0–4 BE)
- 
 4 BE (Sehr gut): Aufgabenstellung gemäß Operator umfassend, vollständig und korrekt erfüllt. Klar strukturierte, redundanzfreie Wiedergabe aller Informationen. Kommunikationssituation (Adressat, Textsorte) durchgehend überzeugend. Geschickte Umschreibungsstrategien.
- 
 3 BE (Gut): Wesentliche Informationen meist strukturiert und korrekt wiedergegeben. Kommunikationssituation meist überzeugend. In der Regel gelungene Umschreibungsstrategien.
- 
 2 BE (Befriedigend/Ausreichend): Nur teilweise strukturiert, Informationen nicht immer vollständig/korrekt. Adressatenbezug nur zum Teil umgesetzt. Umschreibungsstrategien nur stellenweise gelungen.
- 
 1 BE (Mangelhaft): Weitgehend unvollständig, wenig strukturiert oder fehlerhaft. Kommunikationssituation kaum beachtet.
- 
 0 BE (Ungenügend): Aufgabenstellung nicht erfüllt, gravierende Lücken, fehlende Struktur, falsche Textsorte.
- 
+
 2. Sprache (0–6 BE)
- 
 6 BE: Nahezu fehlerfrei. Breites Repertoire an Grammatik, Wortschatz, Syntax und Idiomatik. Sehr treffende Gestaltung.
- 
 5 BE: Meist fehlerfrei (leichte Verstöße). Gefestigtes Repertoire, meist abwechslungsreich und treffend.
- 
 4 BE: Mehrere, zumeist leichte Verstöße; Verständlichkeit kaum beeinträchtigt. Angemessenes Repertoire, ansprechende Ausgestaltung.
- 
 3 BE: Mehrere, teils gravierende Verstöße; Verständlichkeit insgesamt noch gewährleistet. Eingeschränktes Repertoire.
- 
 2 BE: Viele gravierende Verstöße; Verständlichkeit stellenweise deutlich beeinträchtigt. Deutlich eingeschränktes Repertoire.
- 
 1 BE: Sehr viele/häufig gravierende Fehler; Verständlichkeit insgesamt beeinträchtigt. Stark eingeschränktes Ausdrucksvermögen.
- 
 0 BE: Äußerst gravierende Mängel; Text unverständlich.
- 
+
 Output-Format:
- 
 Punktzahl: Nenne die BE für Inhalt und Sprache separat.
- 
 Begründung: Erläutere kurz pro Bereich, warum die Punktzahl vergeben wurde (bezugnehmend auf Fachbegriffe wie redundanzfrei, Adressatenbezug oder Sprachrichtigkeit).
- 
 Korrekturhinweise: Liste spezifische sprachliche Fehler oder inhaltliche Lücken auf.
-        Gib das Feedback in Markdown Format:
-        # Bewertungsergebnis
-        **Gesamtpunktzahl: [Punkte]/10 BE**
-        ## Inhalt ([Punkte]/4 BE)
-        ## Sprache ([Punkte]/6 BE)
-        ## Tipps
+        Gib das Feedback in Markdown Format:
+        # Bewertungsergebnis
+        **Gesamtpunktzahl: [Punkte]/10 BE**
+        ## Inhalt ([Punkte]/4 BE)
+        ## Sprache ([Punkte]/6 BE)
+        ## Tipps
         `;
 
         try {
@@ -753,20 +774,25 @@ Korrekturhinweise: Liste spezifische sprachliche Fehler oder inhaltliche Lücken
         }
     }
 
+    // --- TOOLS ---
     function countWords(str) {
         if(!str) return 0;
         return str.trim().split(/\s+/).filter(a => a).length;
     }
 
+    function nav(id) {
+        document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('nav-'+id).classList.add('active');
+    }
+
+    // Init Call
+    window.onload();
+    
     function printPDF() {
         const element = document.createElement('div');
-        element.innerHTML = `
-            <h2>Mediation Submission</h2>
-            <p><strong>Topic:</strong> ${document.getElementById('topicSelect').value}</p>
-            <div style="border:1px solid #000; padding: 1rem; margin-top:1rem;">
-                ${document.getElementById('studentText').value.replace(/\n/g, '<br>')}
-            </div>
-        `;
+        element.innerHTML = `<h2>Submission</h2><div>${document.getElementById('studentText').value.replace(/\n/g, '<br>')}</div>`;
         html2pdf().from(element).save('mediation_abitur.pdf');
     }
 </script>
