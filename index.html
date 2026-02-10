@@ -51,7 +51,7 @@
             border-radius: 8px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             text-align: center;
-            max-width: 400px;
+            max-width: 450px;
             width: 90%;
         }
 
@@ -276,11 +276,11 @@
     <div id="login-screen">
         <div class="login-box">
             <h2>🔒 Zugriff geschützt</h2>
-            <p>Bitte geben Sie das Kurs-Passwort ein.</p>
-            <input type="password" id="accessPassword" placeholder="Kennwort..." onkeyup="if(event.key === 'Enter') checkPassword()">
+            <p>Bitte geben Sie das Passwort ein:</p>
+            <input type="password" id="accessPassword" placeholder="Passwort..." onkeyup="if(event.key === 'Enter') checkPassword()">
             <br>
-            <button class="btn" onclick="checkPassword()">Anmelden</button>
-            <div id="loginError" class="login-error">Falsches Kennwort!</div>
+            <button class="btn" onclick="checkPassword()">Starten</button>
+            <div id="loginError" class="login-error">Falsches Passwort.</div>
         </div>
     </div>
 
@@ -445,37 +445,58 @@
 
 <script>
     // ======================================================
-    // LEHRER-KONFIGURATION
+    // LOGIK-BEREICH (Keine festen Keys mehr)
     // ======================================================
     
-   
-    // 1. Hälfte Ihres Keys (z.B. "sk-proj-12345..."):
-    const KEY_PART_1 = "sk-proj-SVyGmuEr5Kh-k5m11dDeDDOYUkftO0b_PvD-AWhgRAYesTq0XzodDkWaoYSBrMn4xUKAHkd6"; 
-    
-    // 2. Hälfte Ihres Keys (der Rest):
-    const KEY_PART_2 = "MAT3BlbkFJSnNJY-nBq2OF_pz6kW8flrAe28gQl7YTUtGgKHM5l7f43sniQPXH0nfisQdjKRUbjpujiE9iMA";
-
-    
-    const TEACHER_API_KEY = KEY_PART_1 + KEY_PART_2;
-    const COURSE_PASSWORD = "SAG_mediationstraining";
-    
     const CONFIG = {
-        model: "gpt-5.2", 
+        model: "gpt-4o", 
         storedData: {}
     };
 
-    // ======================================================
-    // LOGIK-BEREICH
-    // ======================================================
+    // --- HELPER: KEY RETRIEVAL ---
+    function getApiKey() {
+        return sessionStorage.getItem('openai_api_key') || "";
+    }
 
+    // --- LOGIN LOGIC (Password IS Api Key) ---
     function checkPassword() {
         const input = document.getElementById('accessPassword').value.trim();
-        if (input === COURSE_PASSWORD) {
+        const error = document.getElementById('loginError');
+        
+        // Einfache Validierung: Muss mit "sk-" beginnen und lang genug sein
+        if (input.startsWith('sk-') && input.length > 20) {
+            // Speichere den Key für die Session
+            sessionStorage.setItem('openai_api_key', input);
+            
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-wrapper').style.display = 'flex';
-            sessionStorage.setItem('is_authenticated', 'true');
         } else {
-            document.getElementById('loginError').style.display = 'block';
+            error.style.display = 'block';
+        }
+    }
+
+    // --- INIT ---
+    window.onload = function() {
+        // Check if already logged in (key exists in session)
+        if(getApiKey()) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-wrapper').style.display = 'flex';
+        }
+
+        const savedText = localStorage.getItem('student_text');
+        if(savedText) {
+            const el = document.getElementById('studentText');
+            if(el) {
+                el.value = savedText;
+                const countEl = document.getElementById('currentWordCount');
+                if(countEl) countEl.innerText = countWords(savedText);
+            }
+        }
+
+        const examData = localStorage.getItem('exam_data');
+        if(examData) {
+            CONFIG.storedData = JSON.parse(examData);
+            renderExam(CONFIG.storedData);
         }
     }
 
@@ -518,7 +539,7 @@
         nav('task');
     }
 
-    // --- GENERIC OCR FUNCTION (FOR SETUP & STUDENT) ---
+    // --- GENERIC OCR FUNCTION ---
     async function performOCR(inputId, outputId, loaderId, statusId) {
         const fileInput = document.getElementById(inputId);
         const file = fileInput.files[0];
@@ -534,12 +555,13 @@
         
         try {
             const base64Image = await toBase64(file);
+            const apiKey = getApiKey();
             
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${TEACHER_API_KEY}`
+                    'Authorization': `Bearer ${apiKey}`
                 },
                 body: JSON.stringify({
                     model: "gpt-4o",
@@ -562,12 +584,8 @@
             const transcribedText = data.choices[0].message.content;
             
             if(textArea) {
-                // If student workspace, append. If setup field, replace or append? 
-                // We'll append with a newline for better UX in both cases
                 const current = textArea.value;
                 textArea.value = current + (current ? "\n\n" : "") + transcribedText;
-                
-                // If it's the student text, trigger autosave
                 if(outputId === 'studentText') autoSave();
             }
             
@@ -595,10 +613,11 @@
         const topic = document.getElementById('topicSelect').value;
         const length = document.getElementById('sourceLength').value || 600;
         const errorBox = document.getElementById('setupError');
+        const apiKey = getApiKey();
         
-        if(TEACHER_API_KEY.includes("HIER_DIE_ERSTE") || TEACHER_API_KEY.length < 20) {
+        if(!apiKey) {
              errorBox.style.display = 'block';
-             errorBox.innerText = "Fehler: Der Lehrer hat den API Key noch nicht im Code hinterlegt.";
+             errorBox.innerText = "Fehler: Kein API Key gefunden. Bitte neu laden und einloggen.";
              return;
         }
 
@@ -632,7 +651,8 @@ Context: Beschreibe eine konkrete Situation, in der der Schüler ehrenamtlich t�
 The Mission: Erkläre, warum der Text geschrieben werden muss (z. B. eine Website-Präsentation, ein Blog-Beitrag für eine internationale Community oder ein Artikel für ein Partnerprojekt).
 
 Specific Requirements: Nenne die Zielgruppe, die Textsorte (z. B. blog entry, article) und das Ziel des Textes.
-Es sollen immer 2 bis 4 präzise Aspekte aufgezeigt werden, die aus dem deutschen Text (Teil 1) herausgearbeitet werden müssen. Nutze Formulierungen wie: "Write an article/blog entry on... and what measures..."
+
+Nenne 2 bis 4 präzise Aspekte , die aus dem deutschen Text (Teil 1) herausgearbeitet werden müssen. Nutze Formulierungen wie: "Write an article/blog entry on... and what measures...". Schreibe ganze Sätze ohne Stichpunkte.
 
 Beispiel-Niveau: Orientiere dich sprachlich an den Beispielen: "You have come across... You decide to write..." oder "All the international volunteers have been asked to present..."
 Hier ist eine Bespielaufgabe, orientiere dich vom Stil an dieser:
@@ -656,7 +676,7 @@ measures are being taken or considered to reduce light pollution.
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${TEACHER_API_KEY}`
+                    'Authorization': `Bearer ${apiKey}`
                 },
                 body: JSON.stringify({
                     model: CONFIG.model,
@@ -688,7 +708,7 @@ measures are being taken or considered to reduce light pollution.
         }
     }
 
-    // --- STANDARD RENDER & LOGIC ---
+    // --- RENDERING & TOOLS ---
     function renderExam(data) {
         if(document.getElementById('taskInstruction')) {
              document.getElementById('taskInstruction').innerText = data.task_instruction;
@@ -708,8 +728,21 @@ measures are being taken or considered to reduce light pollution.
         }
     }
 
+    function autoSave() {
+        const textInput = document.getElementById('studentText');
+        if(!textInput) return;
+        const text = textInput.value;
+        localStorage.setItem('student_text', text);
+        const countElement = document.getElementById('currentWordCount');
+        if(countElement) {
+            countElement.innerText = countWords(text);
+        }
+    }
+
     async function submitForCorrection() {
         const text = document.getElementById('studentText').value;
+        const apiKey = getApiKey();
+        
         if(text.split(' ').length < 50) { alert("Ihr Text ist zu kurz."); return; }
 
         nav('feedback');
@@ -717,7 +750,7 @@ measures are being taken or considered to reduce light pollution.
         document.getElementById('feedbackContent').innerHTML = "";
 
         const rubric = `
-Rolle: Du bist ein erfahrener und strenger Englischlehrer an einem bayerischen Gymnasium. Deine Aufgabe ist es, eine Schülerleistung im Bereich Sprachmittlung (Mediation) basierend auf einem offiziellen Bewertungsraster zu evaluieren.
+Rolle: Du bist ein erfahrener Englischlehrer an einem bayerischen Gymnasium. Deine Aufgabe ist es, eine Schülerleistung im Bereich Sprachmittlung (Mediation) basierend auf einem offiziellen Bewertungsraster zu evaluieren.
 Bewertungslogik: Die Bewertung teilt sich in zwei Bereiche:
 Inhalt und Textstruktur (max. 4 Bewertungseinheiten - BE) 
 Sprache (max. 6 Bewertungseinheiten - BE) 
@@ -755,7 +788,7 @@ Korrekturhinweise: Liste spezifische sprachliche Fehler oder inhaltliche Lücken
         try {
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TEACHER_API_KEY}` },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
                 body: JSON.stringify({
                     model: CONFIG.model,
                     messages: [
@@ -776,7 +809,6 @@ Korrekturhinweise: Liste spezifische sprachliche Fehler oder inhaltliche Lücken
         }
     }
 
-    // --- TOOLS ---
     function countWords(str) {
         if(!str) return 0;
         return str.trim().split(/\s+/).filter(a => a).length;
@@ -789,9 +821,6 @@ Korrekturhinweise: Liste spezifische sprachliche Fehler oder inhaltliche Lücken
         document.getElementById('nav-'+id).classList.add('active');
     }
 
-    // Init Call
-    window.onload();
-    
     function printPDF() {
         const element = document.createElement('div');
         element.innerHTML = `<h2>Submission</h2><div>${document.getElementById('studentText').value.replace(/\n/g, '<br>')}</div>`;
